@@ -1,0 +1,34 @@
+name: Deploy Front Porch Economics
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  deploy-worker:
+    name: Deploy Cloudflare Worker
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Deploy Worker
+        uses: cloudflare/wrangler-action@v3
+        with:
+          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          accountId: bd46ae11d484452139c38cbfdd7b2a46
+          workingDirectory: worker
+
+  deploy-pages:
+    name: Deploy Cloudflare Pages
+    runs-on: ubuntu-latest
+    needs: deploy-worker
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Deploy to Cloudflare Pages
+        uses: cloudflare/wrangler-action@v3
+        with:
+          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          accountId: bd46ae11d484452139c38cbfdd7b2a46
+          command: pages deploy public --project-name=front-porch-economics --commit-dirty=true
