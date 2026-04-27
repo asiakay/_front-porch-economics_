@@ -1,4 +1,4 @@
-name = "front-porch-economics-api"
+name = "front-porch-economics"
 main = "worker.js"
 compatibility_date = "2024-01-01"
 
