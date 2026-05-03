@@ -50,9 +50,12 @@
   .hero-quote blockquote { font-family: 'Playfair Display', serif; font-size: 1.6rem; font-style: italic; color: var(--straw); line-height: 1.4; margin-bottom: 1rem; }
   .hero-quote cite { font-size: 0.8rem; color: rgba(245,237,214,0.6); letter-spacing: 0.08em; text-transform: uppercase; font-style: normal; }
 
-  .strip { background: var(--clay); padding: 1.2rem 4rem; display: flex; flex-wrap: wrap; gap: 1rem 3rem; align-items: center; }
+  .strip { background: var(--clay); padding: 1.2rem 0; overflow: hidden; }
+  .strip-track { display: flex; gap: 3rem; align-items: center; width: max-content; animation: marquee 22s linear infinite; }
+  .strip:hover .strip-track { animation-play-state: paused; }
   .strip-item { font-size: 0.8rem; color: var(--cream); letter-spacing: 0.06em; text-transform: uppercase; white-space: nowrap; }
-  .strip-item::after { content: ' · '; color: var(--straw); }
+  .strip-item::after { content: ' · '; color: var(--straw); margin-left: 3rem; }
+  @keyframes marquee { from { transform: translateX(0); } to { transform: translateX(-50%); } }
 
   .for-section { padding: 6rem 4rem; display: grid; grid-template-columns: 1fr 2fr; gap: 4rem; max-width: 1200px; margin: 0 auto; }
   .section-label { font-size: 0.75rem; font-weight: 500; letter-spacing: 0.12em; text-transform: uppercase; color: var(--clay); padding-top: 0.4rem; }
@@ -111,7 +114,7 @@
     .steps { grid-template-columns: 1fr; gap: 2rem; }
     .how-section { padding: 3rem 1.5rem; }
     .join-section { padding: 3rem 1.5rem; }
-    .strip { padding: 1rem 1.5rem; gap: 0.75rem 1.5rem; }
+
     .form-row { grid-template-columns: 1fr; }
     footer { flex-direction: column; gap: 0.5rem; text-align: center; padding: 1.5rem; }
   }
@@ -146,12 +149,20 @@
 </section>
 
 <div class="strip">
-  <div class="strip-item">Cooperative Builders</div>
-  <div class="strip-item">Independent Media Makers</div>
-  <div class="strip-item">Civic Organizers</div>
-  <div class="strip-item">Students & Scholars</div>
-  <div class="strip-item">Community Administrators</div>
-  <div class="strip-item">Cultural Workers</div>
+  <div class="strip-track" aria-hidden="true">
+    <div class="strip-item">Cooperative Builders</div>
+    <div class="strip-item">Independent Media Makers</div>
+    <div class="strip-item">Civic Organizers</div>
+    <div class="strip-item">Students &amp; Scholars</div>
+    <div class="strip-item">Community Administrators</div>
+    <div class="strip-item">Cultural Workers</div>
+    <div class="strip-item">Cooperative Builders</div>
+    <div class="strip-item">Independent Media Makers</div>
+    <div class="strip-item">Civic Organizers</div>
+    <div class="strip-item">Students &amp; Scholars</div>
+    <div class="strip-item">Community Administrators</div>
+    <div class="strip-item">Cultural Workers</div>
+  </div>
 </div>
 
 <section class="for-section">
