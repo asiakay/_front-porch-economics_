@@ -41,5 +41,12 @@ The platform is in active development, building in public starting in Roxbury, M
 ---
 
 ## Repo Structure
+front-porch-economics/
+├── public/                   # Static frontend assets
+├── worker/                   # Cloudflare Worker source
+├── .github/workflows/        # GitHub Actions CI/CD
+├── front-porch-economics.html # Main frontend
+├── worker.js                 # Worker entrypoint
+└── wrangler.toml             # Cloudflare deployment config
 
 Daily costs and benefits over time
