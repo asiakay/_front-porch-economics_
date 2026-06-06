@@ -14,8 +14,7 @@
     --moss: #4A5E3A;
     --warm-white: #FBF6EC;
   }
-  A
-  
+
   * { margin: 0; padding: 0; box-sizing: border-box; }
   body { background: var(--warm-white); color: var(--earth); font-family: 'DM Sans', sans-serif; overflow-x: hidden; }
 
@@ -53,11 +52,14 @@
   .hero-quote cite { font-size: 0.8rem; color: rgba(245,237,214,0.6); letter-spacing: 0.08em; text-transform: uppercase; font-style: normal; }
 
   .strip { background: var(--clay); padding: 1.2rem 0; overflow: hidden; }
+  .strip-sr { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0,0,0,0); white-space: nowrap; border: 0; }
   .strip-track { display: flex; gap: 3rem; align-items: center; width: max-content; animation: marquee 22s linear infinite; }
-  .strip:hover .strip-track { animation-play-state: paused; }
+  .strip:hover .strip-track,
+  .strip:focus-within .strip-track { animation-play-state: paused; }
   .strip-item { font-size: 0.8rem; color: var(--cream); letter-spacing: 0.06em; text-transform: uppercase; white-space: nowrap; }
   .strip-item::after { content: ' · '; color: var(--straw); margin-left: 3rem; }
   @keyframes marquee { from { transform: translateX(0); } to { transform: translateX(-50%); } }
+  @media (prefers-reduced-motion: reduce) { .strip-track { animation: none; } }
 
   .for-section { padding: 6rem 4rem; display: grid; grid-template-columns: 1fr 2fr; gap: 4rem; max-width: 1200px; margin: 0 auto; }
   .section-label { font-size: 0.75rem; font-weight: 500; letter-spacing: 0.12em; text-transform: uppercase; color: var(--clay); padding-top: 0.4rem; }
@@ -151,6 +153,7 @@
 </section>
 
 <div class="strip">
+  <p class="strip-sr">Built for: Cooperative Builders, Independent Media Makers, Civic Organizers, Students &amp; Scholars, Community Administrators, Cultural Workers.</p>
   <div class="strip-track" aria-hidden="true">
     <div class="strip-item">Cooperative Builders</div>
     <div class="strip-item">Independent Media Makers</div>
