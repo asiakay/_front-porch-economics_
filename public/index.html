@@ -26,9 +26,82 @@
   }
   .nav-logo { font-family: 'Playfair Display', serif; font-size: 1.1rem; font-weight: 700; color: var(--earth); }
   .nav-logo span { color: var(--clay); }
+  .nav-right { display: flex; align-items: center; gap: 0.75rem; }
   .nav-cta { background: var(--earth); color: var(--cream); border: none; padding: 0.6rem 1.4rem; font-family: 'DM Sans', sans-serif; font-size: 0.85rem; font-weight: 500; cursor: pointer; letter-spacing: 0.04em; transition: background 0.2s; }
   .nav-cta:hover { background: var(--clay); }
+  .nav-signin { background: transparent; color: var(--earth); border: 1px solid rgba(44,24,16,0.25); padding: 0.6rem 1.2rem; font-family: 'DM Sans', sans-serif; font-size: 0.85rem; font-weight: 500; cursor: pointer; letter-spacing: 0.04em; transition: all 0.2s; }
+  .nav-signin:hover { border-color: var(--clay); color: var(--clay); }
+  .nav-user { font-size: 0.85rem; color: var(--clay); font-weight: 500; }
+  .nav-signout { background: transparent; color: #a08070; border: none; padding: 0.4rem 0; font-family: 'DM Sans', sans-serif; font-size: 0.8rem; cursor: pointer; text-decoration: underline; transition: color 0.2s; }
+  .nav-signout:hover { color: var(--clay); }
 
+  /* ── LOGIN MODAL ─────────────────────────────────── */
+  .modal-overlay {
+    display: none; position: fixed; inset: 0; z-index: 200;
+    background: rgba(44,24,16,0.7); backdrop-filter: blur(4px);
+    align-items: center; justify-content: center;
+  }
+  .modal-overlay.open { display: flex; }
+  .modal {
+    background: var(--earth); color: var(--cream);
+    width: 100%; max-width: 420px; margin: 1rem;
+    padding: 2.5rem 2.5rem 2rem;
+    position: relative;
+    animation: modalIn 0.25s ease;
+  }
+  @keyframes modalIn { from { opacity:0; transform:translateY(16px); } to { opacity:1; transform:translateY(0); } }
+  .modal-close {
+    position: absolute; top: 1.2rem; right: 1.4rem;
+    background: none; border: none; color: rgba(245,237,214,0.5);
+    font-size: 1.4rem; cursor: pointer; line-height: 1; transition: color 0.2s;
+  }
+  .modal-close:hover { color: var(--cream); }
+  .modal-tag { font-size: 0.72rem; letter-spacing: 0.12em; text-transform: uppercase; color: var(--straw); margin-bottom: 1rem; }
+  .modal h2 { font-family: 'Playfair Display', serif; font-size: 1.6rem; line-height: 1.2; margin-bottom: 0.5rem; }
+  .modal-sub { font-size: 0.88rem; color: rgba(245,237,214,0.65); line-height: 1.6; margin-bottom: 1.8rem; font-weight: 300; }
+
+  .modal-step { display: none; flex-direction: column; gap: 1rem; }
+  .modal-step.active { display: flex; }
+
+  .modal .form-group { display: flex; flex-direction: column; gap: 0.4rem; }
+  .modal .form-group label { font-size: 0.72rem; letter-spacing: 0.1em; text-transform: uppercase; color: rgba(212,168,83,0.8); }
+  .modal .form-group input {
+    padding: 0.85rem 1rem; background: rgba(245,237,214,0.08);
+    border: 1px solid rgba(245,237,214,0.2); color: var(--cream);
+    font-family: 'DM Sans', sans-serif; font-size: 0.95rem; outline: none;
+    transition: border-color 0.2s;
+  }
+  .modal .form-group input:focus { border-color: var(--straw); }
+  .modal .form-group input::placeholder { color: rgba(245,237,214,0.3); }
+
+  .pin-input {
+    font-size: 1.6rem !important;
+    letter-spacing: 0.4em;
+    text-align: center;
+    font-family: 'Playfair Display', serif !important;
+  }
+
+  .modal-btn {
+    background: var(--straw); color: var(--earth); border: none;
+    padding: 0.95rem 1.5rem; font-family: 'DM Sans', sans-serif;
+    font-size: 0.9rem; font-weight: 500; cursor: pointer;
+    letter-spacing: 0.04em; transition: background 0.2s; margin-top: 0.25rem;
+  }
+  .modal-btn:hover { background: #c49840; }
+  .modal-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+
+  .modal-msg { font-size: 0.85rem; padding: 0.75rem 1rem; margin-top: 0.25rem; display: none; }
+  .modal-msg.error { background: rgba(139,69,19,0.25); border: 1px solid rgba(139,69,19,0.5); color: #f4b885; display: block; }
+  .modal-msg.success { background: rgba(74,94,58,0.25); border: 1px solid rgba(74,94,58,0.5); color: #a8c99a; display: block; }
+
+  .modal-back { background: none; border: none; color: rgba(245,237,214,0.45); font-family: 'DM Sans', sans-serif; font-size: 0.8rem; cursor: pointer; text-align: left; padding: 0; margin-top: 0.25rem; transition: color 0.2s; }
+  .modal-back:hover { color: var(--cream); }
+
+  .modal-resend { background: none; border: none; color: var(--straw); font-family: 'DM Sans', sans-serif; font-size: 0.82rem; cursor: pointer; padding: 0; text-decoration: underline; transition: opacity 0.2s; }
+  .modal-resend:hover { opacity: 0.75; }
+  .modal-resend:disabled { opacity: 0.4; cursor: not-allowed; text-decoration: none; }
+
+  /* ── REST OF PAGE ────────────────────────────────── */
   .hero { min-height: 100vh; display: grid; grid-template-columns: 1fr 1fr; padding-top: 80px; }
   .hero-left { padding: 6rem 3rem 4rem 4rem; display: flex; flex-direction: column; justify-content: center; }
   .hero-tag { font-size: 0.75rem; font-weight: 500; letter-spacing: 0.12em; text-transform: uppercase; color: var(--clay); margin-bottom: 1.5rem; display: flex; align-items: center; gap: 0.5rem; }
@@ -118,9 +191,10 @@
     .steps { grid-template-columns: 1fr; gap: 2rem; }
     .how-section { padding: 3rem 1.5rem; }
     .join-section { padding: 3rem 1.5rem; }
-
     .form-row { grid-template-columns: 1fr; }
     footer { flex-direction: column; gap: 0.5rem; text-align: center; padding: 1.5rem; }
+    nav { padding: 1rem 1.25rem; }
+    .modal { padding: 2rem 1.5rem 1.75rem; }
   }
 </style>
 </head>
@@ -128,8 +202,50 @@
 
 <nav>
   <div class="nav-logo">Front Porch <span>Economics</span></div>
-  <button class="nav-cta" onclick="document.querySelector('.join-section').scrollIntoView({behavior:'smooth'})">Pull Up a Chair</button>
+  <div class="nav-right">
+    <div id="navAuth">
+      <button class="nav-signin" id="navSigninBtn" onclick="openModal()">Sign In</button>
+    </div>
+    <button class="nav-cta" onclick="document.querySelector('.join-section').scrollIntoView({behavior:'smooth'})">Pull Up a Chair</button>
+  </div>
 </nav>
+
+<!-- ── LOGIN MODAL ─────────────────────────────────────────── -->
+<div class="modal-overlay" id="loginModal" role="dialog" aria-modal="true" aria-label="Sign in">
+  <div class="modal">
+    <button class="modal-close" onclick="closeModal()" aria-label="Close">×</button>
+
+    <!-- Step 1: Email -->
+    <div class="modal-step active" id="stepEmail">
+      <div class="modal-tag">Member Access</div>
+      <h2>Back on the porch.</h2>
+      <p class="modal-sub">Enter your email and we'll send a code to your phone.</p>
+      <div class="form-group">
+        <label for="loginEmail">Email</label>
+        <input type="email" id="loginEmail" placeholder="you@email.com" autocomplete="email" />
+      </div>
+      <button class="modal-btn" id="sendPinBtn" onclick="sendPin()">Send my code</button>
+      <div class="modal-msg" id="emailMsg"></div>
+    </div>
+
+    <!-- Step 2: PIN -->
+    <div class="modal-step" id="stepPin">
+      <div class="modal-tag">Member Access</div>
+      <h2>Check your phone.</h2>
+      <p class="modal-sub" id="pinSub">We sent a 6-digit code to your number.</p>
+      <div class="form-group">
+        <label for="loginPin">Your code</label>
+        <input type="text" id="loginPin" class="pin-input" placeholder="——————" maxlength="6" inputmode="numeric" autocomplete="one-time-code" />
+      </div>
+      <button class="modal-btn" id="verifyPinBtn" onclick="verifyPin()">Verify</button>
+      <div class="modal-msg" id="pinMsg"></div>
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-top:0.25rem;">
+        <button class="modal-back" onclick="goBackToEmail()">← Different email</button>
+        <button class="modal-resend" id="resendBtn" onclick="resendPin()">Resend code</button>
+      </div>
+    </div>
+  </div>
+</div>
 
 <section class="hero">
   <div class="hero-left">
@@ -232,43 +348,248 @@
 </footer>
 
 <script>
-  // UPDATE THIS after you deploy the Worker
 const WORKER_URL = 'https://01-front-porch-economics.asialakaygrady-6d4.workers.dev';
-  document.getElementById('signupForm').addEventListener('submit', async (e) => {
-    e.preventDefault();
-    const btn = document.getElementById('submitBtn');
-    const msg = document.getElementById('formMessage');
-    const email = document.getElementById('email').value.trim();
-    const name = document.getElementById('name').value.trim();
-    const neighborhood = document.getElementById('neighborhood').value.trim();
-    const building = document.getElementById('building').value.trim();
-    if (!email) return;
-    btn.disabled = true;
-    btn.textContent = 'Pulling up a chair...';
-    msg.className = 'form-message';
-    try {
-      const res = await fetch(`${WORKER_URL}/signup`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email, name, neighborhood, building }),
-      });
+
+// ── AUTH STATE ────────────────────────────────────────────
+
+let currentEmail = '';
+
+async function checkSession() {
+  try {
+    const res = await fetch(`${WORKER_URL}/auth/me`, { credentials: 'include' });
+    if (res.ok) {
       const data = await res.json();
-      if (data.success) {
-        msg.className = 'form-message success';
-        msg.textContent = "Welcome to the porch. We'll be in touch.";
-        e.target.reset();
-      } else {
-        msg.className = 'form-message error';
-        msg.textContent = data.error || 'Something went wrong. Try again.';
-      }
-    } catch {
-      msg.className = 'form-message error';
-      msg.textContent = 'Could not connect. Try again in a moment.';
-    } finally {
-      btn.disabled = false;
-      btn.textContent = 'Pull Up a Chair';
+      if (data.success) setLoggedIn(data.name || data.email);
     }
-  });
+  } catch {}
+}
+
+function setLoggedIn(nameOrEmail) {
+  const display = nameOrEmail.includes('@')
+    ? nameOrEmail.split('@')[0]
+    : nameOrEmail.split(' ')[0];
+  document.getElementById('navAuth').innerHTML = `
+    <span class="nav-user">Hi, ${display}</span>
+    <button class="nav-signout" onclick="signOut()">Sign out</button>
+  `;
+}
+
+function setLoggedOut() {
+  document.getElementById('navAuth').innerHTML =
+    `<button class="nav-signin" onclick="openModal()">Sign In</button>`;
+}
+
+async function signOut() {
+  try {
+    await fetch(`${WORKER_URL}/auth/logout`, { method: 'POST', credentials: 'include' });
+  } catch {}
+  setLoggedOut();
+}
+
+// ── MODAL ─────────────────────────────────────────────────
+
+function openModal() {
+  document.getElementById('loginModal').classList.add('open');
+  document.getElementById('loginEmail').focus();
+  document.body.style.overflow = 'hidden';
+}
+
+function closeModal() {
+  document.getElementById('loginModal').classList.remove('open');
+  document.body.style.overflow = '';
+  resetModal();
+}
+
+function resetModal() {
+  showStep('stepEmail');
+  clearMsg('emailMsg');
+  clearMsg('pinMsg');
+  document.getElementById('loginEmail').value = '';
+  document.getElementById('loginPin').value = '';
+  currentEmail = '';
+}
+
+function showStep(id) {
+  document.querySelectorAll('.modal-step').forEach(s => s.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+}
+
+function setMsg(id, text, type) {
+  const el = document.getElementById(id);
+  el.textContent = text;
+  el.className = `modal-msg ${type}`;
+}
+
+function clearMsg(id) {
+  const el = document.getElementById(id);
+  el.textContent = '';
+  el.className = 'modal-msg';
+}
+
+function goBackToEmail() {
+  showStep('stepEmail');
+  clearMsg('pinMsg');
+  document.getElementById('loginPin').value = '';
+}
+
+// close on overlay click
+document.getElementById('loginModal').addEventListener('click', e => {
+  if (e.target === e.currentTarget) closeModal();
+});
+
+// close on Escape
+document.addEventListener('keydown', e => {
+  if (e.key === 'Escape') closeModal();
+});
+
+// ── PIN FLOW ──────────────────────────────────────────────
+
+async function sendPin() {
+  const email = document.getElementById('loginEmail').value.trim();
+  if (!email || !email.includes('@')) {
+    setMsg('emailMsg', 'Enter a valid email address.', 'error');
+    return;
+  }
+  const btn = document.getElementById('sendPinBtn');
+  btn.disabled = true;
+  btn.textContent = 'Sending…';
+  clearMsg('emailMsg');
+
+  try {
+    const res = await fetch(`${WORKER_URL}/auth/request-pin`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      credentials: 'include',
+      body: JSON.stringify({ email }),
+    });
+    const data = await res.json();
+    if (data.success) {
+      currentEmail = email;
+      document.getElementById('pinSub').textContent =
+        `We sent a 6-digit code to the phone on file for ${email}.`;
+      showStep('stepPin');
+      document.getElementById('loginPin').focus();
+    } else {
+      setMsg('emailMsg', data.error || 'Something went wrong. Try again.', 'error');
+    }
+  } catch {
+    setMsg('emailMsg', 'Could not connect. Try again in a moment.', 'error');
+  } finally {
+    btn.disabled = false;
+    btn.textContent = 'Send my code';
+  }
+}
+
+async function verifyPin() {
+  const pin = document.getElementById('loginPin').value.trim();
+  if (pin.length !== 6 || !/^\d+$/.test(pin)) {
+    setMsg('pinMsg', 'Enter the 6-digit code from your text.', 'error');
+    return;
+  }
+  const btn = document.getElementById('verifyPinBtn');
+  btn.disabled = true;
+  btn.textContent = 'Verifying…';
+  clearMsg('pinMsg');
+
+  try {
+    const res = await fetch(`${WORKER_URL}/auth/verify-pin`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      credentials: 'include',
+      body: JSON.stringify({ email: currentEmail, pin }),
+    });
+    const data = await res.json();
+    if (data.success) {
+      closeModal();
+      setLoggedIn(data.name || data.email);
+    } else {
+      setMsg('pinMsg', data.error || 'Incorrect code. Try again.', 'error');
+    }
+  } catch {
+    setMsg('pinMsg', 'Could not connect. Try again in a moment.', 'error');
+  } finally {
+    btn.disabled = false;
+    btn.textContent = 'Verify';
+  }
+}
+
+async function resendPin() {
+  const btn = document.getElementById('resendBtn');
+  btn.disabled = true;
+  clearMsg('pinMsg');
+
+  try {
+    const res = await fetch(`${WORKER_URL}/auth/request-pin`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      credentials: 'include',
+      body: JSON.stringify({ email: currentEmail }),
+    });
+    const data = await res.json();
+    if (data.success) {
+      setMsg('pinMsg', 'New code sent. Check your phone.', 'success');
+      document.getElementById('loginPin').value = '';
+      document.getElementById('loginPin').focus();
+    } else {
+      setMsg('pinMsg', data.error || 'Could not resend. Try again.', 'error');
+    }
+  } catch {
+    setMsg('pinMsg', 'Could not connect. Try again.', 'error');
+  } finally {
+    setTimeout(() => { btn.disabled = false; }, 30000); // 30s cooldown
+  }
+}
+
+// allow Enter key in PIN input
+document.getElementById('loginPin').addEventListener('keydown', e => {
+  if (e.key === 'Enter') verifyPin();
+});
+
+document.getElementById('loginEmail').addEventListener('keydown', e => {
+  if (e.key === 'Enter') sendPin();
+});
+
+// ── SIGNUP FORM ───────────────────────────────────────────
+
+document.getElementById('signupForm').addEventListener('submit', async (e) => {
+  e.preventDefault();
+  const btn = document.getElementById('submitBtn');
+  const msg = document.getElementById('formMessage');
+  const email = document.getElementById('email').value.trim();
+  const name = document.getElementById('name').value.trim();
+  const neighborhood = document.getElementById('neighborhood').value.trim();
+  const building = document.getElementById('building').value.trim();
+  if (!email) return;
+  btn.disabled = true;
+  btn.textContent = 'Pulling up a chair...';
+  msg.className = 'form-message';
+  try {
+    const res = await fetch(`${WORKER_URL}/signup`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email, name, neighborhood, building }),
+    });
+    const data = await res.json();
+    if (data.success) {
+      msg.className = 'form-message success';
+      msg.textContent = "Welcome to the porch. We'll be in touch.";
+      e.target.reset();
+    } else {
+      msg.className = 'form-message error';
+      msg.textContent = data.error || 'Something went wrong. Try again.';
+    }
+  } catch {
+    msg.className = 'form-message error';
+    msg.textContent = 'Could not connect. Try again in a moment.';
+  } finally {
+    btn.disabled = false;
+    btn.textContent = 'Pull Up a Chair';
+  }
+});
+
+// ── INIT ──────────────────────────────────────────────────
+
+checkSession();
 </script>
 </body>
 </html>
