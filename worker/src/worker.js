@@ -1,17 +1,22 @@
 // Front Porch Economics — Cloudflare Worker API
 // Shared auth + data layer: JWT sessions, SMS PIN via Twilio, protected route middleware
 
-const PAGES_ORIGIN = 'https://front-porch-economics.pages.dev';
 const SESSION_TTL = 60 * 60 * 24 * 7; // 7 days
 const PIN_TTL = 60 * 10;               // 10 minutes
+
+const ALLOWED_ORIGINS = new Set([
+  'https://frontporcheconomics.com',
+  'https://www.frontporcheconomics.com',
+  'https://front-porch-economics.pages.dev',
+  'http://localhost:8787',
+]);
 
 // ─── CORS ─────────────────────────────────────────────────────────────────────
 
 function corsHeaders(origin, withCredentials = false) {
-  const allowed =
-    origin === PAGES_ORIGIN || origin === 'http://localhost:8787'
-      ? origin
-      : PAGES_ORIGIN;
+  const allowed = ALLOWED_ORIGINS.has(origin)
+    ? origin
+    : 'https://frontporcheconomics.com';
   const h = {
     'Access-Control-Allow-Origin': withCredentials ? allowed : '*',
     'Access-Control-Allow-Methods': 'GET, POST, DELETE, OPTIONS',

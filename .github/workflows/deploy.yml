@@ -4,21 +4,19 @@ on:
     branches:
       - main
 jobs:
-  deploy-worker:
+  deploy:
     name: Deploy Cloudflare Worker
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
 
-      - name: Deploy Worker
+      - name: Deploy Worker + Assets
         uses: cloudflare/wrangler-action@v3
         with:
           apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           accountId: 6d42189fc4724a2d0ad8650b53814692
-          workingDirectory: worker
 
       - name: Provision Worker secrets
-        working-directory: worker
         env:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
         run: |
@@ -26,16 +24,3 @@ jobs:
           echo "${{ secrets.TWILIO_ACCOUNT_SID }}"  | npx wrangler secret put TWILIO_ACCOUNT_SID
           echo "${{ secrets.TWILIO_AUTH_TOKEN }}"   | npx wrangler secret put TWILIO_AUTH_TOKEN
           echo "${{ secrets.TWILIO_FROM_NUMBER }}"  | npx wrangler secret put TWILIO_FROM_NUMBER
-
-  deploy-pages:
-    name: Deploy Cloudflare Pages
-    runs-on: ubuntu-latest
-    needs: deploy-worker
-    steps:
-      - uses: actions/checkout@v4
-      - name: Deploy to Cloudflare Pages
-        uses: cloudflare/wrangler-action@v3
-        with:
-          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
-          accountId: 6d42189fc4724a2d0ad8650b53814692
-          command: pages deploy public --project-name=front-porch-economics --commit-dirty=true
