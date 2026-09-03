@@ -336,7 +336,11 @@
       <label for="building">What are you building?</label>
       <textarea id="building" rows="3" placeholder="A cooperative, a documentary, a campaign, a platform, a thesis..."></textarea>
     </div>
-    <button type="submit" class="submit-btn" id="submitBtn">Pull Up a Chair</button>
+    <div class="form-group">
+      <label for="phone">Phone Number *</label>
+      <input type="tel" id="phone" placeholder="+1 (617) 555-0100" required />
+    </div>
+    <button type="submit" class="submit-btn" id="submitBtn">Join the Porch</button>
     <div class="form-message" id="formMessage"></div>
     <p class="form-note">No spam. Just updates when something real is ready.</p>
   </form>
@@ -559,15 +563,16 @@ document.getElementById('signupForm').addEventListener('submit', async (e) => {
   const name = document.getElementById('name').value.trim();
   const neighborhood = document.getElementById('neighborhood').value.trim();
   const building = document.getElementById('building').value.trim();
-  if (!email) return;
+  const phone = document.getElementById('phone').value.trim();
+  if (!email || !phone) return;
   btn.disabled = true;
-  btn.textContent = 'Pulling up a chair...';
+  btn.textContent = 'Joining the porch...';
   msg.className = 'form-message';
   try {
     const res = await fetch(`${WORKER_URL}/signup`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ email, name, neighborhood, building }),
+      body: JSON.stringify({ email, name, neighborhood, building, phone }),
     });
     const data = await res.json();
     if (data.success) {
