@@ -1,0 +1,74 @@
+name: Setup Cloudflare Access Application
+on:
+  workflow_dispatch:
+
+jobs:
+  create-access-app:
+    name: Create Access Application
+    runs-on: ubuntu-latest
+    env:
+      CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+      ACCOUNT_ID: "6d42189fc4724a2d0ad8650b53814692"
+      ADMIN_DOMAIN: "admin.frontporcheconomics.org"
+      ALLOWED_EMAIL: "asialakaygrady@gmail.com"
+      API: "https://api.cloudflare.com/client/v4"
+
+    steps:
+      - name: Create Access Application
+        id: create_app
+        run: |
+          RESPONSE=$(curl -s -X POST "${API}/accounts/${ACCOUNT_ID}/access/apps" \
+            -H "Authorization: Bearer ${CLOUDFLARE_API_TOKEN}" \
+            -H "Content-Type: application/json" \
+            -d '{
+              "name": "Front Porch Economics Admin",
+              "domain": "'"${ADMIN_DOMAIN}"'",
+              "type": "self_hosted",
+              "session_duration": "24h",
+              "auto_redirect_to_identity": false
+            }')
+
+          echo "$RESPONSE" | python3 -m json.tool
+          SUCCESS=$(echo "$RESPONSE" | python3 -c "import sys,json; print(json.load(sys.stdin).get('success',''))")
+          if [[ "$SUCCESS" != "True" ]]; then
+            echo "::error::Failed to create Access Application"
+            exit 1
+          fi
+
+          APP_UUID=$(echo "$RESPONSE" | python3 -c "import sys,json; print(json.load(sys.stdin)['result']['uid'])")
+          echo "app_uuid=${APP_UUID}" >> "$GITHUB_OUTPUT"
+          echo "Access Application created: ${APP_UUID}"
+
+      - name: Attach email-allowlist policy
+        run: |
+          APP_UUID="${{ steps.create_app.outputs.app_uuid }}"
+          RESPONSE=$(curl -s -X POST "${API}/accounts/${ACCOUNT_ID}/access/apps/${APP_UUID}/policies" \
+            -H "Authorization: Bearer ${CLOUDFLARE_API_TOKEN}" \
+            -H "Content-Type: application/json" \
+            -d '{
+              "name": "Allow owner",
+              "precedence": 1,
+              "decision": "allow",
+              "include": [
+                { "email": { "email": "'"${ALLOWED_EMAIL}"'" } }
+              ]
+            }')
+
+          echo "$RESPONSE" | python3 -m json.tool
+          SUCCESS=$(echo "$RESPONSE" | python3 -c "import sys,json; print(json.load(sys.stdin).get('success',''))")
+          if [[ "$SUCCESS" != "True" ]]; then
+            echo "::error::Failed to create Access Policy"
+            exit 1
+          fi
+
+          POLICY_ID=$(echo "$RESPONSE" | python3 -c "import sys,json; print(json.load(sys.stdin)['result']['id'])")
+          echo "Access Policy created: ${POLICY_ID}"
+
+      - name: Summary
+        run: |
+          echo "### Access Application setup complete" >> "$GITHUB_STEP_SUMMARY"
+          echo "" >> "$GITHUB_STEP_SUMMARY"
+          echo "- **Domain:** \`${ADMIN_DOMAIN}\`" >> "$GITHUB_STEP_SUMMARY"
+          echo "- **Allowed:** \`${ALLOWED_EMAIL}\`" >> "$GITHUB_STEP_SUMMARY"
+          echo "" >> "$GITHUB_STEP_SUMMARY"
+          echo "**Remaining manual step:** Add an orange-clouded DNS CNAME for \`${ADMIN_DOMAIN}\` in the Cloudflare dashboard pointing at your Pages domain or Worker." >> "$GITHUB_STEP_SUMMARY"
