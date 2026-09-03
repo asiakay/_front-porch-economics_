@@ -101,6 +101,10 @@
   .modal-resend:hover { opacity: 0.75; }
   .modal-resend:disabled { opacity: 0.4; cursor: not-allowed; text-decoration: none; }
 
+  .modal-join-nudge { font-size: 0.8rem; color: rgba(245,237,214,0.45); margin-top: 1rem; text-align: center; }
+  .modal-join-link { background: none; border: none; color: var(--straw); font-family: 'DM Sans', sans-serif; font-size: 0.8rem; cursor: pointer; padding: 0; text-decoration: underline; transition: opacity 0.2s; }
+  .modal-join-link:hover { opacity: 0.75; }
+
   /* ── REST OF PAGE ────────────────────────────────── */
   .hero { min-height: 100vh; display: grid; grid-template-columns: 1fr 1fr; padding-top: 80px; }
   .hero-left { padding: 6rem 3rem 4rem 4rem; display: flex; flex-direction: column; justify-content: center; }
@@ -211,7 +215,7 @@
     <div id="navAuth">
       <button class="nav-signin" id="navSigninBtn" onclick="openModal()">Sign In</button>
     </div>
-    <button class="nav-cta" onclick="document.querySelector('.join-section').scrollIntoView({behavior:'smooth'})">Pull Up a Chair</button>
+    <button class="nav-cta" onclick="document.querySelector('.join-section').scrollIntoView({behavior:'smooth'})">Join the Porch</button>
   </div>
 </nav>
 
@@ -231,6 +235,7 @@
       </div>
       <button class="modal-btn" id="sendPinBtn" onclick="sendPin()">Send my code</button>
       <div class="modal-msg" id="emailMsg"></div>
+      <p class="modal-join-nudge">Not a member yet? <button class="modal-join-link" onclick="closeModal(); document.querySelector('.join-section').scrollIntoView({behavior:'smooth'});">Join the Porch</button></p>
     </div>
 
     <!-- Step 2: PIN -->
@@ -334,14 +339,6 @@
       </div>
     </div>
     <div class="form-group">
-      <label for="neighborhood">Neighborhood / Area</label>
-      <input type="text" id="neighborhood" placeholder="e.g. Roxbury, Dorchester, Jamaica Plain..." />
-    </div>
-    <div class="form-group">
-      <label for="building">What are you building?</label>
-      <textarea id="building" rows="3" placeholder="A cooperative, a documentary, a campaign, a platform, a thesis..."></textarea>
-    </div>
-    <div class="form-group">
       <label for="phoneNumber">Phone Number *</label>
       <div class="phone-row">
         <select id="phoneCountry" aria-label="Country code">
@@ -369,6 +366,14 @@
         </select>
         <input type="tel" id="phoneNumber" placeholder="(617) 555-0100" required autocomplete="tel-national" />
       </div>
+    </div>
+    <div class="form-group">
+      <label for="neighborhood">Neighborhood / Area</label>
+      <input type="text" id="neighborhood" placeholder="e.g. Roxbury, Dorchester, Jamaica Plain..." />
+    </div>
+    <div class="form-group">
+      <label for="building">What are you building?</label>
+      <textarea id="building" rows="3" placeholder="A cooperative, a documentary, a campaign, a platform, a thesis..."></textarea>
     </div>
     <button type="submit" class="submit-btn" id="submitBtn">Join the Porch</button>
     <div class="form-message" id="formMessage"></div>
@@ -609,7 +614,7 @@ document.getElementById('signupForm').addEventListener('submit', async (e) => {
     const data = await res.json();
     if (data.success) {
       msg.className = 'form-message success';
-      msg.textContent = "Welcome to the porch. We'll be in touch.";
+      msg.innerHTML = `Welcome to the porch. We'll be in touch.<br><span style="font-size:0.85em;opacity:0.85;">Next time, use <button onclick="openModal()" style="background:none;border:none;color:inherit;font:inherit;text-decoration:underline;cursor:pointer;padding:0;">Sign In</button> to access your account.</span>`;
       e.target.reset();
     } else {
       msg.className = 'form-message error';
