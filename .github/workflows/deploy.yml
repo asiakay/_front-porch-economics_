@@ -33,6 +33,11 @@ jobs:
 
           add_column_if_missing pin_attempts "INTEGER NOT NULL DEFAULT 0"
           add_column_if_missing pin_requested_at "INTEGER"
+          add_column_if_missing webauthn_challenge "TEXT"
+          add_column_if_missing webauthn_challenge_exp "INTEGER"
+
+          # Create passkey_credentials table if it does not exist
+          npx wrangler d1 execute front-porch-economics --remote --command="CREATE TABLE IF NOT EXISTS passkey_credentials (credential_id TEXT PRIMARY KEY, email TEXT NOT NULL, public_key TEXT NOT NULL, sign_count INTEGER NOT NULL DEFAULT 0, transports TEXT, created_at INTEGER NOT NULL); CREATE INDEX IF NOT EXISTS idx_passkey_email ON passkey_credentials (email);"
 
       - name: Deploy Worker + Assets
         uses: cloudflare/wrangler-action@v3
@@ -42,7 +47,4 @@ jobs:
 
       - name: Provision Worker secrets
         run: |
-          echo "${{ secrets.JWT_SECRET }}"          | npx wrangler secret put JWT_SECRET
-          echo "${{ secrets.TWILIO_ACCOUNT_SID }}"  | npx wrangler secret put TWILIO_ACCOUNT_SID
-          echo "${{ secrets.TWILIO_AUTH_TOKEN }}"   | npx wrangler secret put TWILIO_AUTH_TOKEN
-          echo "${{ secrets.TWILIO_FROM_NUMBER }}"  | npx wrangler secret put TWILIO_FROM_NUMBER
+          echo "${{ secrets.JWT_SECRET }}" | npx wrangler secret put JWT_SECRET

@@ -228,31 +228,24 @@
     <div class="modal-step active" id="stepEmail">
       <div class="modal-tag">Member Access</div>
       <h2>Back on the porch.</h2>
-      <p class="modal-sub">Enter your email and we'll send a code to your phone.</p>
+      <p class="modal-sub">Enter your email to sign in with your passkey.</p>
       <div class="form-group">
         <label for="loginEmail">Email</label>
         <input type="email" id="loginEmail" placeholder="you@email.com" autocomplete="email" />
       </div>
-      <button class="modal-btn" id="sendPinBtn" onclick="sendPin()">Send my code</button>
+      <button class="modal-btn" id="sendPinBtn" onclick="continueWithEmail()">Continue</button>
       <div class="modal-msg" id="emailMsg"></div>
       <p class="modal-join-nudge">Not a member yet? <button class="modal-join-link" onclick="closeModal(); document.querySelector('.join-section').scrollIntoView({behavior:'smooth'});">Join the Porch</button></p>
     </div>
 
-    <!-- Step 2: PIN -->
-    <div class="modal-step" id="stepPin">
+    <!-- Step 2: Passkey -->
+    <div class="modal-step" id="stepPasskey">
       <div class="modal-tag">Member Access</div>
-      <h2>Check your phone.</h2>
-      <p class="modal-sub" id="pinSub">We sent a 6-digit code to your number.</p>
-      <div class="form-group">
-        <label for="loginPin">Your code</label>
-        <input type="text" id="loginPin" class="pin-input" placeholder="——————" maxlength="6" inputmode="numeric" autocomplete="one-time-code" />
-      </div>
-      <button class="modal-btn" id="verifyPinBtn" onclick="verifyPin()">Verify</button>
-      <div class="modal-msg" id="pinMsg"></div>
-      <div style="display:flex;justify-content:space-between;align-items:center;margin-top:0.25rem;">
-        <button class="modal-back" onclick="goBackToEmail()">← Different email</button>
-        <button class="modal-resend" id="resendBtn" onclick="resendPin()">Resend code</button>
-      </div>
+      <h2>Use your passkey.</h2>
+      <p class="modal-sub" id="passkeySub">Authenticate with Face ID, Touch ID, or your device PIN.</p>
+      <button class="modal-btn" id="passkeyBtn" onclick="authenticatePasskey()">Use Passkey</button>
+      <div class="modal-msg" id="passkeyMsg"></div>
+      <button class="modal-back" onclick="goBackToEmail()">← Different email</button>
     </div>
   </div>
 </div>
@@ -392,6 +385,7 @@ const WORKER_URL = '';
 // ── AUTH STATE ────────────────────────────────────────────
 
 let currentEmail = '';
+let passkeyOptions = null;
 
 async function checkSession() {
   try {
@@ -442,10 +436,10 @@ function closeModal() {
 function resetModal() {
   showStep('stepEmail');
   clearMsg('emailMsg');
-  clearMsg('pinMsg');
+  clearMsg('passkeyMsg');
   document.getElementById('loginEmail').value = '';
-  document.getElementById('loginPin').value = '';
   currentEmail = '';
+  passkeyOptions = null;
 }
 
 function showStep(id) {
@@ -467,8 +461,7 @@ function clearMsg(id) {
 
 function goBackToEmail() {
   showStep('stepEmail');
-  clearMsg('pinMsg');
-  document.getElementById('loginPin').value = '';
+  clearMsg('passkeyMsg');
 }
 
 // close on overlay click
@@ -481,9 +474,19 @@ document.addEventListener('keydown', e => {
   if (e.key === 'Escape') closeModal();
 });
 
-// ── PIN FLOW ──────────────────────────────────────────────
+// ── PASSKEY FLOW ──────────────────────────────────────────
 
-async function sendPin() {
+function base64urlToBuffer(b64) {
+  const bin = atob(b64.replace(/-/g, '+').replace(/_/g, '/'));
+  return Uint8Array.from(bin, c => c.charCodeAt(0)).buffer;
+}
+
+function bufferToBase64url(buf) {
+  return btoa(String.fromCharCode(...new Uint8Array(buf)))
+    .replace(/=/g, '').replace(/\+/g, '-').replace(/\//g, '_');
+}
+
+async function continueWithEmail() {
   const email = document.getElementById('loginEmail').value.trim();
   if (!email || !email.includes('@')) {
     setMsg('emailMsg', 'Enter a valid email address.', 'error');
@@ -491,23 +494,23 @@ async function sendPin() {
   }
   const btn = document.getElementById('sendPinBtn');
   btn.disabled = true;
-  btn.textContent = 'Sending…';
+  btn.textContent = 'Checking…';
   clearMsg('emailMsg');
 
   try {
-    const res = await fetch(`${WORKER_URL}/auth/request-pin`, {
+    const res = await fetch(`${WORKER_URL}/auth/passkey/login-options`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       credentials: 'include',
       body: JSON.stringify({ email }),
     });
     const data = await res.json();
-    if (data.success) {
+    if (res.ok) {
       currentEmail = email;
-      document.getElementById('pinSub').textContent =
-        `We sent a 6-digit code to the phone on file for ${email}.`;
-      showStep('stepPin');
-      document.getElementById('loginPin').focus();
+      passkeyOptions = data;
+      document.getElementById('passkeySub').textContent =
+        `Authenticate as ${email} using your device.`;
+      showStep('stepPasskey');
     } else {
       setMsg('emailMsg', data.error || 'Something went wrong. Try again.', 'error');
     }
@@ -515,77 +518,96 @@ async function sendPin() {
     setMsg('emailMsg', 'Could not connect. Try again in a moment.', 'error');
   } finally {
     btn.disabled = false;
-    btn.textContent = 'Send my code';
+    btn.textContent = 'Continue';
   }
 }
 
-async function verifyPin() {
-  const pin = document.getElementById('loginPin').value.trim();
-  if (pin.length !== 6 || !/^\d+$/.test(pin)) {
-    setMsg('pinMsg', 'Enter the 6-digit code from your text.', 'error');
-    return;
-  }
-  const btn = document.getElementById('verifyPinBtn');
+async function authenticatePasskey() {
+  const btn = document.getElementById('passkeyBtn');
   btn.disabled = true;
-  btn.textContent = 'Verifying…';
-  clearMsg('pinMsg');
+  btn.textContent = 'Authenticating…';
+  clearMsg('passkeyMsg');
 
   try {
-    const res = await fetch(`${WORKER_URL}/auth/verify-pin`, {
+    const credential = await navigator.credentials.get({
+      publicKey: {
+        ...passkeyOptions,
+        challenge: base64urlToBuffer(passkeyOptions.challenge),
+        allowCredentials: passkeyOptions.allowCredentials.map(c => ({
+          ...c,
+          id: base64urlToBuffer(c.id),
+        })),
+      },
+    });
+
+    const res = await fetch(`${WORKER_URL}/auth/passkey/login-finish`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       credentials: 'include',
-      body: JSON.stringify({ email: currentEmail, pin }),
+      body: JSON.stringify({
+        email: currentEmail,
+        response: {
+          id: credential.id,
+          authenticatorData: bufferToBase64url(credential.response.authenticatorData),
+          clientDataJSON: bufferToBase64url(credential.response.clientDataJSON),
+          signature: bufferToBase64url(credential.response.signature),
+          userHandle: credential.response.userHandle ? bufferToBase64url(credential.response.userHandle) : null,
+        },
+      }),
     });
     const data = await res.json();
     if (data.success) {
       closeModal();
       setLoggedIn(data.name || data.email);
     } else {
-      setMsg('pinMsg', data.error || 'Incorrect code. Try again.', 'error');
+      setMsg('passkeyMsg', data.error || 'Authentication failed. Try again.', 'error');
     }
-  } catch {
-    setMsg('pinMsg', 'Could not connect. Try again in a moment.', 'error');
+  } catch (err) {
+    if (err.name === 'NotAllowedError') {
+      setMsg('passkeyMsg', 'Authentication was cancelled.', 'error');
+    } else {
+      setMsg('passkeyMsg', 'Could not authenticate. Try again.', 'error');
+    }
   } finally {
     btn.disabled = false;
-    btn.textContent = 'Verify';
+    btn.textContent = 'Use Passkey';
   }
 }
 
-async function resendPin() {
-  const btn = document.getElementById('resendBtn');
-  btn.disabled = true;
-  clearMsg('pinMsg');
+async function registerPasskey(email) {
+  if (!window.PublicKeyCredential) return;
+  const optRes = await fetch(`${WORKER_URL}/auth/passkey/register-options`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ email }),
+  });
+  if (!optRes.ok) return;
+  const options = await optRes.json();
 
-  try {
-    const res = await fetch(`${WORKER_URL}/auth/request-pin`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      credentials: 'include',
-      body: JSON.stringify({ email: currentEmail }),
-    });
-    const data = await res.json();
-    if (data.success) {
-      setMsg('pinMsg', 'New code sent. Check your phone.', 'success');
-      document.getElementById('loginPin').value = '';
-      document.getElementById('loginPin').focus();
-    } else {
-      setMsg('pinMsg', data.error || 'Could not resend. Try again.', 'error');
-    }
-  } catch {
-    setMsg('pinMsg', 'Could not connect. Try again.', 'error');
-  } finally {
-    setTimeout(() => { btn.disabled = false; }, 30000); // 30s cooldown
-  }
+  const credential = await navigator.credentials.create({
+    publicKey: {
+      ...options,
+      challenge: base64urlToBuffer(options.challenge),
+      user: { ...options.user, id: base64urlToBuffer(options.user.id) },
+    },
+  });
+
+  await fetch(`${WORKER_URL}/auth/passkey/register-finish`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      email,
+      response: {
+        attestationObject: bufferToBase64url(credential.response.attestationObject),
+        clientDataJSON: bufferToBase64url(credential.response.clientDataJSON),
+        transports: credential.response.getTransports ? credential.response.getTransports() : [],
+      },
+    }),
+  });
 }
-
-// allow Enter key in PIN input
-document.getElementById('loginPin').addEventListener('keydown', e => {
-  if (e.key === 'Enter') verifyPin();
-});
 
 document.getElementById('loginEmail').addEventListener('keydown', e => {
-  if (e.key === 'Enter') sendPin();
+  if (e.key === 'Enter') continueWithEmail();
 });
 
 // ── SIGNUP FORM ───────────────────────────────────────────
@@ -614,8 +636,14 @@ document.getElementById('signupForm').addEventListener('submit', async (e) => {
     const data = await res.json();
     if (data.success) {
       msg.className = 'form-message success';
-      msg.innerHTML = `Welcome to the porch. We'll be in touch.<br><span style="font-size:0.85em;opacity:0.85;">Next time, use <button onclick="openModal()" style="background:none;border:none;color:inherit;font:inherit;text-decoration:underline;cursor:pointer;padding:0;">Sign In</button> to access your account.</span>`;
+      msg.textContent = 'Welcome to the porch. Setting up your passkey…';
       e.target.reset();
+      try {
+        await registerPasskey(email);
+        msg.textContent = 'Welcome to the porch. Passkey registered — sign in with it next time.';
+      } catch {
+        msg.textContent = "Welcome to the porch. We'll be in touch.";
+      }
     } else {
       msg.className = 'form-message error';
       msg.textContent = data.error || 'Something went wrong. Try again.';
