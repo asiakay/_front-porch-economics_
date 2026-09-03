@@ -101,6 +101,10 @@
   .modal-resend:hover { opacity: 0.75; }
   .modal-resend:disabled { opacity: 0.4; cursor: not-allowed; text-decoration: none; }
 
+  .modal-join-nudge { font-size: 0.8rem; color: rgba(245,237,214,0.45); margin-top: 1rem; text-align: center; }
+  .modal-join-link { background: none; border: none; color: var(--straw); font-family: 'DM Sans', sans-serif; font-size: 0.8rem; cursor: pointer; padding: 0; text-decoration: underline; transition: opacity 0.2s; }
+  .modal-join-link:hover { opacity: 0.75; }
+
   /* ── REST OF PAGE ────────────────────────────────── */
   .hero { min-height: 100vh; display: grid; grid-template-columns: 1fr 1fr; padding-top: 80px; }
   .hero-left { padding: 6rem 3rem 4rem 4rem; display: flex; flex-direction: column; justify-content: center; }
@@ -163,6 +167,11 @@
   .form-group input, .form-group textarea { padding: 0.85rem 1rem; border: 1.5px solid rgba(44,24,16,0.2); font-family: 'DM Sans', sans-serif; font-size: 0.9rem; background: var(--warm-white); color: var(--earth); outline: none; transition: border-color 0.2s; resize: none; }
   .form-group input:focus, .form-group textarea:focus { border-color: var(--clay); }
   .form-group input::placeholder, .form-group textarea::placeholder { color: #b09080; }
+  .phone-row { display: flex; gap: 0; }
+  .phone-row select { padding: 0.85rem 0.6rem; border: 1.5px solid rgba(44,24,16,0.2); border-right: none; font-family: 'DM Sans', sans-serif; font-size: 0.9rem; background: var(--warm-white); color: var(--earth); outline: none; cursor: pointer; appearance: none; -webkit-appearance: none; min-width: 90px; transition: border-color 0.2s; }
+  .phone-row select:focus { border-color: var(--clay); }
+  .phone-row input { flex: 1; border-left: 1px solid rgba(44,24,16,0.12); }
+  .phone-row:focus-within select, .phone-row:focus-within input { border-color: var(--clay); }
   .submit-btn { background: var(--earth); color: var(--cream); border: none; padding: 1rem 2rem; font-family: 'DM Sans', sans-serif; font-size: 0.9rem; font-weight: 500; cursor: pointer; letter-spacing: 0.04em; transition: background 0.2s; width: 100%; margin-top: 0.5rem; }
   .submit-btn:hover { background: var(--clay); }
   .submit-btn:disabled { opacity: 0.6; cursor: not-allowed; }
@@ -206,7 +215,7 @@
     <div id="navAuth">
       <button class="nav-signin" id="navSigninBtn" onclick="openModal()">Sign In</button>
     </div>
-    <button class="nav-cta" onclick="document.querySelector('.join-section').scrollIntoView({behavior:'smooth'})">Pull Up a Chair</button>
+    <button class="nav-cta" onclick="document.querySelector('.join-section').scrollIntoView({behavior:'smooth'})">Join the Porch</button>
   </div>
 </nav>
 
@@ -226,6 +235,7 @@
       </div>
       <button class="modal-btn" id="sendPinBtn" onclick="sendPin()">Send my code</button>
       <div class="modal-msg" id="emailMsg"></div>
+      <p class="modal-join-nudge">Not a member yet? <button class="modal-join-link" onclick="closeModal(); document.querySelector('.join-section').scrollIntoView({behavior:'smooth'});">Join the Porch</button></p>
     </div>
 
     <!-- Step 2: PIN -->
@@ -329,16 +339,41 @@
       </div>
     </div>
     <div class="form-group">
+      <label for="phoneNumber">Phone Number *</label>
+      <div class="phone-row">
+        <select id="phoneCountry" aria-label="Country code">
+          <option value="+1" data-mask="(###) ###-####" selected>🇺🇸 +1</option>
+          <option value="+1" data-mask="(###) ###-####">🇨🇦 +1</option>
+          <option value="+44" data-mask="#### ######">🇬🇧 +44</option>
+          <option value="+61" data-mask="#### ### ###">🇦🇺 +61</option>
+          <option value="+64" data-mask="### ### ####">🇳🇿 +64</option>
+          <option value="+353" data-mask="## ### ####">🇮🇪 +353</option>
+          <option value="+27" data-mask="## ### ####">🇿🇦 +27</option>
+          <option value="+91" data-mask="##### #####">🇮🇳 +91</option>
+          <option value="+234" data-mask="### ### ####">🇳🇬 +234</option>
+          <option value="+233" data-mask="## ### ####">🇬🇭 +233</option>
+          <option value="+254" data-mask="### ######">🇰🇪 +254</option>
+          <option value="+49" data-mask="### ########">🇩🇪 +49</option>
+          <option value="+33" data-mask="# ## ## ## ##">🇫🇷 +33</option>
+          <option value="+34" data-mask="### ### ###">🇪🇸 +34</option>
+          <option value="+39" data-mask="### ### ####">🇮🇹 +39</option>
+          <option value="+55" data-mask="(##) #####-####">🇧🇷 +55</option>
+          <option value="+52" data-mask="### ### ####">🇲🇽 +52</option>
+          <option value="+57" data-mask="### ### ####">🇨🇴 +57</option>
+          <option value="+81" data-mask="##-####-####">🇯🇵 +81</option>
+          <option value="+82" data-mask="##-####-####">🇰🇷 +82</option>
+          <option value="+86" data-mask="### #### ####">🇨🇳 +86</option>
+        </select>
+        <input type="tel" id="phoneNumber" placeholder="(617) 555-0100" required autocomplete="tel-national" />
+      </div>
+    </div>
+    <div class="form-group">
       <label for="neighborhood">Neighborhood / Area</label>
       <input type="text" id="neighborhood" placeholder="e.g. Roxbury, Dorchester, Jamaica Plain..." />
     </div>
     <div class="form-group">
       <label for="building">What are you building?</label>
       <textarea id="building" rows="3" placeholder="A cooperative, a documentary, a campaign, a platform, a thesis..."></textarea>
-    </div>
-    <div class="form-group">
-      <label for="phone">Phone Number *</label>
-      <input type="tel" id="phone" placeholder="+1 (617) 555-0100" required />
     </div>
     <button type="submit" class="submit-btn" id="submitBtn">Join the Porch</button>
     <div class="form-message" id="formMessage"></div>
@@ -563,7 +598,9 @@ document.getElementById('signupForm').addEventListener('submit', async (e) => {
   const name = document.getElementById('name').value.trim();
   const neighborhood = document.getElementById('neighborhood').value.trim();
   const building = document.getElementById('building').value.trim();
-  const phone = document.getElementById('phone').value.trim();
+  const countryCode = document.getElementById('phoneCountry').value;
+  const localNumber = document.getElementById('phoneNumber').value.replace(/\D/g, '');
+  const phone = localNumber ? `${countryCode}${localNumber}` : '';
   if (!email || !phone) return;
   btn.disabled = true;
   btn.textContent = 'Joining the porch...';
@@ -577,7 +614,7 @@ document.getElementById('signupForm').addEventListener('submit', async (e) => {
     const data = await res.json();
     if (data.success) {
       msg.className = 'form-message success';
-      msg.textContent = "Welcome to the porch. We'll be in touch.";
+      msg.innerHTML = `Welcome to the porch. We'll be in touch.<br><span style="font-size:0.85em;opacity:0.85;">Next time, use <button onclick="openModal()" style="background:none;border:none;color:inherit;font:inherit;text-decoration:underline;cursor:pointer;padding:0;">Sign In</button> to access your account.</span>`;
       e.target.reset();
     } else {
       msg.className = 'form-message error';
@@ -588,9 +625,66 @@ document.getElementById('signupForm').addEventListener('submit', async (e) => {
     msg.textContent = 'Could not connect. Try again in a moment.';
   } finally {
     btn.disabled = false;
-    btn.textContent = 'Pull Up a Chair';
+    btn.textContent = 'Join the Porch';
   }
 });
+
+// ── PHONE FORMATTING ──────────────────────────────────────
+
+(function () {
+  const phoneInput = document.getElementById('phoneNumber');
+  const countrySelect = document.getElementById('phoneCountry');
+
+  function getMask() {
+    const opt = countrySelect.options[countrySelect.selectedIndex];
+    return (opt && opt.dataset.mask) || '### ### ####';
+  }
+
+  function updatePlaceholder() {
+    phoneInput.placeholder = getMask().replace(/#/g, '0');
+  }
+
+  function formatWithMask(mask, digits) {
+    let out = '';
+    let di = 0;
+    for (let i = 0; i < mask.length && di < digits.length; i++) {
+      if (mask[i] === '#') {
+        out += digits[di++];
+      } else {
+        out += mask[i];
+        // if next mask char is also non-#, keep going
+      }
+    }
+    return out;
+  }
+
+  phoneInput.addEventListener('input', function (e) {
+    const raw = this.value.replace(/\D/g, '');
+    const mask = getMask();
+    this.value = formatWithMask(mask, raw);
+  });
+
+  phoneInput.addEventListener('keydown', function (e) {
+    // Allow backspace to delete separator chars cleanly
+    if (e.key === 'Backspace') {
+      const val = this.value;
+      const pos = this.selectionStart;
+      if (pos > 0 && /[^0-9]/.test(val[pos - 1])) {
+        e.preventDefault();
+        this.value = val.slice(0, pos - 1) + val.slice(pos);
+        this.setSelectionRange(pos - 1, pos - 1);
+      }
+    }
+  });
+
+  countrySelect.addEventListener('change', function () {
+    updatePlaceholder();
+    phoneInput.value = '';
+    phoneInput.focus();
+  });
+
+  updatePlaceholder();
+})();
 
 // ── INIT ──────────────────────────────────────────────────
 
