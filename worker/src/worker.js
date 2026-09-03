@@ -40,7 +40,7 @@ function corsHeaders(origin, withCredentials = false) {
   const allowed = ALLOWED_ORIGINS.has(origin) ? origin : 'https://frontporcheconomics.com';
   const h = {
     'Access-Control-Allow-Origin': withCredentials ? allowed : '*',
-    'Access-Control-Allow-Methods': 'GET, POST, DELETE, OPTIONS',
+    'Access-Control-Allow-Methods': 'GET, POST, PATCH, DELETE, OPTIONS',
     'Access-Control-Allow-Headers': 'Content-Type',
   };
   if (withCredentials) h['Access-Control-Allow-Credentials'] = 'true';
@@ -448,6 +448,78 @@ async function handlePasskeyLoginFinish(request, env, cors) {
   );
 }
 
+async function handleUpdateProfile(request, env, cors) {
+  const auth = await requireAuth(request, env);
+  if (!auth) return json({ success: false, error: 'Not authenticated' }, 401, cors);
+
+  const body = await request.json();
+  const fields = {};
+  if (typeof body.name === 'string') fields.name = body.name.trim() || null;
+  if (typeof body.neighborhood === 'string') fields.neighborhood = body.neighborhood.trim() || null;
+  if (typeof body.building === 'string') fields.building = body.building.trim() || null;
+
+  if (Object.keys(fields).length > 0) {
+    const sets = Object.keys(fields).map(k => `${k} = ?`).join(', ');
+    const values = [...Object.values(fields), auth.email];
+    await env.DB.prepare(`UPDATE signups SET ${sets} WHERE lower(email) = lower(?)`)
+      .bind(...values).run();
+  }
+
+  const user = await getUserByEmail(env.DB, auth.email);
+  return json({ success: true, email: auth.email, name: user.name, neighborhood: user.neighborhood, building: user.building }, 200, cors);
+}
+
+async function handleGetMembers(request, env, cors) {
+  const auth = await requireAuth(request, env);
+  if (!auth) return json({ success: false, error: 'Not authenticated' }, 401, cors);
+
+  const result = await env.DB.prepare(
+    'SELECT name, neighborhood, building FROM signups ORDER BY created_at DESC'
+  ).all();
+  return json({ success: true, members: result.results || [] }, 200, cors);
+}
+
+async function handleGetLinks(request, env, cors) {
+  const auth = await requireAuth(request, env);
+  if (!auth) return json({ success: false, error: 'Not authenticated' }, 401, cors);
+
+  const result = await env.DB.prepare(
+    'SELECT id, url, title, notes, link_type, created_at FROM saved_links WHERE email = ? ORDER BY created_at DESC'
+  ).bind(auth.email).all();
+  return json({ success: true, links: result.results || [] }, 200, cors);
+}
+
+async function handleCreateLink(request, env, cors) {
+  const auth = await requireAuth(request, env);
+  if (!auth) return json({ success: false, error: 'Not authenticated' }, 401, cors);
+
+  const body = await request.json();
+  const linkUrl = typeof body.url === 'string' ? body.url.trim() : '';
+  if (!linkUrl) return json({ success: false, error: 'URL is required' }, 400, cors);
+
+  const title = typeof body.title === 'string' ? body.title.trim() || null : null;
+  const notes = typeof body.notes === 'string' ? body.notes.trim() || null : null;
+  const link_type = typeof body.link_type === 'string' && body.link_type.trim() ? body.link_type.trim() : 'external';
+  const id = crypto.randomUUID();
+  const now = Math.floor(Date.now() / 1000);
+
+  await env.DB.prepare(
+    'INSERT INTO saved_links (id, email, url, title, notes, link_type, created_at) VALUES (?, ?, ?, ?, ?, ?, ?)'
+  ).bind(id, auth.email, linkUrl, title, notes, link_type, now).run();
+
+  return json({ success: true, link: { id, url: linkUrl, title, notes, link_type, created_at: now } }, 200, cors);
+}
+
+async function handleDeleteLink(request, env, cors, linkId) {
+  const auth = await requireAuth(request, env);
+  if (!auth) return json({ success: false, error: 'Not authenticated' }, 401, cors);
+
+  await env.DB.prepare('DELETE FROM saved_links WHERE id = ? AND email = ?')
+    .bind(linkId, auth.email).run();
+
+  return json({ success: true }, 200, cors);
+}
+
 async function handleLogout(request, env, cors) {
   const cookie = request.headers.get('Cookie') || '';
   const match = cookie.match(/(?:^|;\s*)fpe_session=([^;]+)/);
@@ -489,7 +561,10 @@ export default {
   async fetch(request, env, ctx) {
     const url = new URL(request.url);
     const origin = request.headers.get('Origin') || '';
-    const isAuthRoute = url.pathname.startsWith('/auth/');
+    const isAuthRoute = url.pathname.startsWith('/auth/') ||
+      url.pathname === '/members' ||
+      url.pathname === '/links' ||
+      url.pathname.startsWith('/links/');
     const cors = corsHeaders(origin, isAuthRoute);
 
     if (request.method === 'OPTIONS') return new Response(null, { headers: cors });
@@ -502,6 +577,13 @@ export default {
       if (request.method === 'POST' && url.pathname === '/auth/passkey/login-finish') return await handlePasskeyLoginFinish(request, env, cors);
       if (request.method === 'POST' && url.pathname === '/auth/logout') return await handleLogout(request, env, cors);
       if (request.method === 'GET' && url.pathname === '/auth/me') return await handleMe(request, env, cors);
+      if (request.method === 'PATCH' && url.pathname === '/auth/profile') return await handleUpdateProfile(request, env, cors);
+      if (request.method === 'GET' && url.pathname === '/members') return await handleGetMembers(request, env, cors);
+      if (request.method === 'GET' && url.pathname === '/links') return await handleGetLinks(request, env, cors);
+      if (request.method === 'POST' && url.pathname === '/links') return await handleCreateLink(request, env, cors);
+      if (request.method === 'DELETE' && url.pathname.startsWith('/links/')) {
+        return await handleDeleteLink(request, env, cors, url.pathname.slice('/links/'.length));
+      }
       return new Response('Front Porch Economics API', { status: 200 });
     } catch (err) {
       console.error(err);
