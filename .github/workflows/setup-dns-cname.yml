@@ -20,15 +20,14 @@ jobs:
           RESPONSE=$(curl -s "${API}/zones?name=${ZONE_NAME}" \
             -H "Authorization: Bearer ${CLOUDFLARE_API_TOKEN}")
 
-          echo "$RESPONSE" | python3 -m json.tool
-          ZONE_ID=$(echo "$RESPONSE" | python3 -c "
-import sys, json
-d = json.load(sys.stdin)
-results = d.get('result', [])
-if not results:
-    raise SystemExit('Zone not found — check that frontporcheconomics.org is in this Cloudflare account')
-print(results[0]['id'])
-")
+          echo "$RESPONSE" | jq .
+          ZONE_ID=$(echo "$RESPONSE" | jq -r '.result[0].id // empty')
+
+          if [[ -z "$ZONE_ID" ]]; then
+            echo "::error::Zone not found — check that ${ZONE_NAME} is in this Cloudflare account"
+            exit 1
+          fi
+
           echo "zone_id=${ZONE_ID}" >> "$GITHUB_OUTPUT"
           echo "Zone ID: ${ZONE_ID}"
 
@@ -47,14 +46,15 @@ print(results[0]['id'])
               "comment": "Admin subdomain protected by Cloudflare Access"
             }')
 
-          echo "$RESPONSE" | python3 -m json.tool
-          SUCCESS=$(echo "$RESPONSE" | python3 -c "import sys,json; print(json.load(sys.stdin).get('success',''))")
-          if [[ "$SUCCESS" != "True" ]]; then
+          echo "$RESPONSE" | jq .
+          SUCCESS=$(echo "$RESPONSE" | jq -r '.success')
+
+          if [[ "$SUCCESS" != "true" ]]; then
             echo "::error::Failed to create DNS record"
             exit 1
           fi
 
-          echo "CNAME created: ${RECORD_NAME}.${ZONE_NAME} → ${RECORD_TARGET} (proxied)"
+          echo "CNAME created: ${RECORD_NAME}.${ZONE_NAME} -> ${RECORD_TARGET} (proxied)"
 
       - name: Summary
         run: |
