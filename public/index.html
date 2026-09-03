@@ -560,8 +560,7 @@ async function authenticatePasskey() {
     });
     const data = await res.json();
     if (data.success) {
-      closeModal();
-      setLoggedIn(data.name || data.email);
+      window.location.href = '/member';
     } else {
       setMsg('passkeyMsg', data.error || 'Authentication failed. Try again.', 'error');
     }
