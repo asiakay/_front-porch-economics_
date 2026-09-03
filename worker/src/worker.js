@@ -3,6 +3,8 @@
 
 const SESSION_TTL = 60 * 60 * 24 * 7; // 7 days
 const PIN_TTL = 60 * 10;               // 10 minutes
+const PIN_MAX_ATTEMPTS = 6;
+const PIN_REQUEST_COOLDOWN = 60;        // 60 seconds per account
 
 const ALLOWED_ORIGINS = new Set([
   'https://frontporcheconomics.com',
@@ -10,6 +12,32 @@ const ALLOWED_ORIGINS = new Set([
   'https://front-porch-economics.pages.dev',
   'http://localhost:8787',
 ]);
+
+// ─── NORMALIZATION ─────────────────────────────────────────────────────────────
+
+function normalizeEmail(value) {
+  return typeof value === 'string' ? value.trim().toLowerCase() : '';
+}
+
+function normalizePhone(value) {
+  if (typeof value !== 'string') return null;
+  const raw = value.trim();
+  if (!raw) return null;
+
+  const digits = raw.replace(/\D/g, '');
+  let normalized;
+
+  if (digits.length === 10) normalized = `+1${digits}`;
+  else if (digits.length === 11 && digits.startsWith('1')) normalized = `+${digits}`;
+  else if (raw.startsWith('+') && digits.length >= 8 && digits.length <= 15) normalized = `+${digits}`;
+  else return null;
+
+  return /^\+[1-9]\d{7,14}$/.test(normalized) ? normalized : null;
+}
+
+function isValidEmail(email) {
+  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+}
 
 // ─── CORS ─────────────────────────────────────────────────────────────────────
 
@@ -114,14 +142,18 @@ async function sendSMS(to, body, env) {
 // ─── DB HELPERS ───────────────────────────────────────────────────────────────
 
 const getUserByEmail = (db, email) =>
-  db.prepare('SELECT * FROM signups WHERE email = ?').bind(email).first();
+  db.prepare('SELECT * FROM signups WHERE lower(email) = lower(?)').bind(email).first();
 
-const setUserPin = (db, email, pinHash, expiresAt) =>
-  db.prepare('UPDATE signups SET pin = ?, pin_expires_at = ? WHERE email = ?')
-    .bind(pinHash, expiresAt, email).run();
+const setUserPin = (db, email, pinHash, expiresAt, attempts = 0, requestedAt = null) =>
+  db.prepare('UPDATE signups SET pin = ?, pin_expires_at = ?, pin_attempts = ?, pin_requested_at = ? WHERE lower(email) = lower(?)')
+    .bind(pinHash, expiresAt, attempts, requestedAt, email).run();
+
+const incrementPinAttempts = (db, email) =>
+  db.prepare('UPDATE signups SET pin_attempts = COALESCE(pin_attempts, 0) + 1 WHERE lower(email) = lower(?)')
+    .bind(email).run();
 
 const setUserPhone = (db, email, phone) =>
-  db.prepare('UPDATE signups SET phone = ? WHERE email = ?').bind(phone, email).run();
+  db.prepare('UPDATE signups SET phone = ? WHERE lower(email) = lower(?)').bind(phone, email).run();
 
 async function createSession(db, email) {
   const id = crypto.randomUUID();
@@ -142,33 +174,49 @@ const deleteSession = (db, sessionId) =>
   db.prepare('DELETE FROM sessions WHERE id = ?').bind(sessionId).run();
 
 // ─── AUTH MIDDLEWARE ───────────────────────────────────────────────────────────
-// Call in any protected route: const auth = await requireAuth(request, env);
-// Returns { email, sessionId } or null if unauthenticated.
 
 export async function requireAuth(request, env) {
   const cookie = request.headers.get('Cookie') || '';
   const match = cookie.match(/(?:^|;\s*)fpe_session=([^;]+)/);
   if (!match) return null;
-  const payload = await verifyJWT(match[1], env.JWT_SECRET);
-  if (!payload?.sid) return null;
+
+  const payload = await verifyJWT(match[1], env.JWT_SECRET).catch(() => null);
+  if (!payload?.sid || !payload?.sub) return null;
+
   const session = await getSession(env.DB, payload.sid);
   if (!session) return null;
-  return { email: payload.sub, sessionId: payload.sid };
+
+  if (normalizeEmail(session.email) !== normalizeEmail(payload.sub)) return null;
+
+  return { email: normalizeEmail(session.email), sessionId: payload.sid };
 }
 
 // ─── ROUTE HANDLERS ───────────────────────────────────────────────────────────
 
 async function handleSignup(request, env, cors) {
-  const { email, name, neighborhood, building, phone } = await request.json();
+  const body = await request.json();
+  const email = normalizeEmail(body.email);
+  const phone = normalizePhone(body.phone);
+  const name = typeof body.name === 'string' ? body.name.trim() : '';
+  const neighborhood = typeof body.neighborhood === 'string' ? body.neighborhood.trim() : '';
+  const building = typeof body.building === 'string' ? body.building.trim() : '';
 
-  if (!email || !email.includes('@')) {
+  if (!isValidEmail(email)) {
     return json({ success: false, error: 'Valid email required' }, 400, cors);
+  }
+  if (!phone) {
+    return json({ success: false, error: 'Valid phone number required' }, 400, cors);
+  }
+
+  const existing = await getUserByEmail(env.DB, email);
+  if (existing) {
+    return json({ success: false, error: 'Already on the list.' }, 409, cors);
   }
 
   try {
     await env.DB.prepare(
       'INSERT INTO signups (email, name, neighborhood, building, phone) VALUES (?, ?, ?, ?, ?)'
-    ).bind(email, name || null, neighborhood || null, building || null, phone || null).run();
+    ).bind(email, name || null, neighborhood || null, building || null, phone).run();
 
     return json({ success: true, message: 'Welcome to the porch.' }, 200, cors);
   } catch (err) {
@@ -180,9 +228,10 @@ async function handleSignup(request, env, cors) {
 }
 
 async function handleRequestPin(request, env, cors) {
-  const { email, phone } = await request.json();
+  const body = await request.json();
+  const email = normalizeEmail(body.email);
 
-  if (!email || !email.includes('@')) {
+  if (!isValidEmail(email)) {
     return json({ success: false, error: 'Valid email required' }, 400, cors);
   }
 
@@ -191,25 +240,43 @@ async function handleRequestPin(request, env, cors) {
     return json({ success: false, error: 'Email not found. Sign up first.' }, 404, cors);
   }
 
-  const phoneToUse = phone || user.phone;
+  const requestedPhone = body.phone ? normalizePhone(body.phone) : null;
+  if (body.phone && !requestedPhone) {
+    return json({ success: false, error: 'Valid phone number required' }, 400, cors);
+  }
+
+  const phoneToUse = requestedPhone || normalizePhone(user.phone);
   if (!phoneToUse) {
     return json({ success: false, error: 'Phone number required to receive a PIN.' }, 400, cors);
   }
 
-  if (phone && phone !== user.phone) {
-    await setUserPhone(env.DB, email, phone);
+  const now = Math.floor(Date.now() / 1000);
+  const lastRequestedAt = Number(user.pin_requested_at || 0);
+  if (lastRequestedAt && now - lastRequestedAt < PIN_REQUEST_COOLDOWN) {
+    const retryAfter = PIN_REQUEST_COOLDOWN - (now - lastRequestedAt);
+    return json(
+      { success: false, error: `Please wait ${retryAfter} seconds before requesting another code.` },
+      429,
+      { ...cors, 'Retry-After': String(retryAfter) }
+    );
+  }
+
+  if (requestedPhone && requestedPhone !== normalizePhone(user.phone)) {
+    await setUserPhone(env.DB, email, requestedPhone);
   }
 
   const pin = generatePin();
-  const expiresAt = Math.floor(Date.now() / 1000) + PIN_TTL;
-  await setUserPin(env.DB, email, await hashPin(pin), expiresAt);
+  const expiresAt = now + PIN_TTL;
+  await setUserPin(env.DB, email, await hashPin(pin), expiresAt, 0, now);
 
   const sent = await sendSMS(
     phoneToUse,
     `Your Front Porch Economics code: ${pin}. Valid for 10 minutes.`,
     env
   );
+
   if (!sent) {
+    await setUserPin(env.DB, email, null, null, 0, null);
     return json({ success: false, error: 'Could not send PIN. Try again.' }, 500, cors);
   }
 
@@ -217,10 +284,12 @@ async function handleRequestPin(request, env, cors) {
 }
 
 async function handleVerifyPin(request, env, cors) {
-  const { email, pin } = await request.json();
+  const body = await request.json();
+  const email = normalizeEmail(body.email);
+  const pin = typeof body.pin === 'string' ? body.pin.trim() : '';
 
-  if (!email || !pin) {
-    return json({ success: false, error: 'Email and PIN required' }, 400, cors);
+  if (!isValidEmail(email) || !/^\d{6}$/.test(pin)) {
+    return json({ success: false, error: 'Valid email and 6-digit PIN required' }, 400, cors);
   }
 
   const user = await getUserByEmail(env.DB, email);
@@ -228,27 +297,46 @@ async function handleVerifyPin(request, env, cors) {
     return json({ success: false, error: 'No PIN found. Request a new one.' }, 400, cors);
   }
 
-  if (user.pin_expires_at < Math.floor(Date.now() / 1000)) {
+  const now = Math.floor(Date.now() / 1000);
+  if (user.pin_expires_at < now) {
+    await setUserPin(env.DB, email, null, null, 0, null);
     return json({ success: false, error: 'PIN expired. Request a new one.' }, 400, cors);
   }
 
+  const attempts = Number(user.pin_attempts || 0);
+  if (attempts >= PIN_MAX_ATTEMPTS) {
+    await setUserPin(env.DB, email, null, null, 0, null);
+    return json({ success: false, error: 'Too many incorrect attempts. Request a new code.' }, 429, cors);
+  }
+
   if ((await hashPin(pin)) !== user.pin) {
+    const nextAttempts = attempts + 1;
+    await incrementPinAttempts(env.DB, email);
+
+    if (nextAttempts >= PIN_MAX_ATTEMPTS) {
+      await setUserPin(env.DB, email, null, null, 0, null);
+      return json({ success: false, error: 'Too many incorrect attempts. Request a new code.' }, 429, cors);
+    }
+
     return json({ success: false, error: 'Incorrect PIN.' }, 401, cors);
   }
 
-  // Consume the PIN immediately so it can't be reused
-  await setUserPin(env.DB, email, null, null);
+  // Consume the PIN immediately so it can't be reused.
+  await setUserPin(env.DB, email, null, null, 0, null);
 
-  const sessionId = await createSession(env.DB, email);
-  const now = Math.floor(Date.now() / 1000);
-  const token = await signJWT({ sub: email, sid: sessionId, exp: now + SESSION_TTL }, env.JWT_SECRET);
+  const canonicalEmail = normalizeEmail(user.email);
+  const sessionId = await createSession(env.DB, canonicalEmail);
+  const token = await signJWT(
+    { sub: canonicalEmail, sid: sessionId, exp: now + SESSION_TTL },
+    env.JWT_SECRET
+  );
 
   return json(
-    { success: true, email: user.email, name: user.name },
+    { success: true, email: canonicalEmail, name: user.name },
     200,
     {
       ...cors,
-      'Set-Cookie': `fpe_session=${token}; HttpOnly; Secure; SameSite=None; Max-Age=${SESSION_TTL}; Path=/`,
+      'Set-Cookie': `fpe_session=${token}; HttpOnly; Secure; SameSite=Lax; Max-Age=${SESSION_TTL}; Path=/`,
     }
   );
 }
@@ -263,7 +351,7 @@ async function handleLogout(request, env, cors) {
   return json(
     { success: true },
     200,
-    { ...cors, 'Set-Cookie': 'fpe_session=; HttpOnly; Secure; SameSite=None; Max-Age=0; Path=/' }
+    { ...cors, 'Set-Cookie': 'fpe_session=; HttpOnly; Secure; SameSite=Lax; Max-Age=0; Path=/' }
   );
 }
 
@@ -272,11 +360,24 @@ async function handleMe(request, env, cors) {
   if (!auth) {
     return json({ success: false, error: 'Not authenticated' }, 401, cors);
   }
+
   const user = await getUserByEmail(env.DB, auth.email);
+  if (!user) {
+    await deleteSession(env.DB, auth.sessionId);
+    return json(
+      { success: false, error: 'Session is no longer valid' },
+      401,
+      {
+        ...cors,
+        'Set-Cookie': 'fpe_session=; HttpOnly; Secure; SameSite=Lax; Max-Age=0; Path=/',
+      }
+    );
+  }
+
   return json(
     {
       success: true,
-      email: user.email,
+      email: normalizeEmail(user.email),
       name: user.name,
       neighborhood: user.neighborhood,
       building: user.building,
