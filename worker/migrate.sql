@@ -8,16 +8,18 @@
 --   The CREATE TABLE IF NOT EXISTS blocks are safe to re-run.
 
 CREATE TABLE IF NOT EXISTS signups (
-  email              TEXT PRIMARY KEY,
-  name               TEXT,
-  neighborhood       TEXT,
-  building           TEXT,
-  phone               TEXT,
-  pin                 TEXT,
-  pin_expires_at      INTEGER,
-  pin_attempts        INTEGER NOT NULL DEFAULT 0,
-  pin_requested_at    INTEGER,
-  created_at          INTEGER NOT NULL DEFAULT (unixepoch())
+  email                 TEXT PRIMARY KEY,
+  name                  TEXT,
+  neighborhood          TEXT,
+  building              TEXT,
+  phone                 TEXT,
+  pin                   TEXT,
+  pin_expires_at        INTEGER,
+  pin_attempts          INTEGER NOT NULL DEFAULT 0,
+  pin_requested_at      INTEGER,
+  enrollment_token      TEXT,
+  enrollment_token_exp  INTEGER,
+  created_at            INTEGER NOT NULL DEFAULT (unixepoch())
 );
 
 CREATE TABLE IF NOT EXISTS sessions (
@@ -57,3 +59,5 @@ CREATE INDEX IF NOT EXISTS idx_passkey_email ON passkey_credentials (email);
 -- ALTER TABLE signups ADD COLUMN pin_requested_at INTEGER;
 -- ALTER TABLE signups ADD COLUMN webauthn_challenge TEXT;
 -- ALTER TABLE signups ADD COLUMN webauthn_challenge_exp INTEGER;
+-- ALTER TABLE signups ADD COLUMN enrollment_token TEXT;
+-- ALTER TABLE signups ADD COLUMN enrollment_token_exp INTEGER;

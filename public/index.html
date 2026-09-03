@@ -34,6 +34,8 @@
   .nav-user { font-size: 0.85rem; color: var(--clay); font-weight: 500; }
   .nav-signout { background: transparent; color: #a08070; border: none; padding: 0.4rem 0; font-family: 'DM Sans', sans-serif; font-size: 0.8rem; cursor: pointer; text-decoration: underline; transition: color 0.2s; }
   .nav-signout:hover { color: var(--clay); }
+  .nav-member { background: transparent; color: var(--earth); border: 1px solid rgba(44,24,16,0.25); padding: 0.5rem 1rem; font-family: 'DM Sans', sans-serif; font-size: 0.82rem; font-weight: 500; cursor: pointer; letter-spacing: 0.04em; transition: all 0.2s; text-decoration: none; display: inline-block; }
+  .nav-member:hover { border-color: var(--clay); color: var(--clay); }
 
   /* ── LOGIN MODAL ─────────────────────────────────── */
   .modal-overlay {
@@ -403,6 +405,7 @@ function setLoggedIn(nameOrEmail) {
     : nameOrEmail.split(' ')[0];
   document.getElementById('navAuth').innerHTML = `
     <span class="nav-user">Hi, ${display}</span>
+    <a class="nav-member" href="/member">Member Area</a>
     <button class="nav-signout" onclick="signOut()">Sign out</button>
   `;
 }
@@ -574,12 +577,13 @@ async function authenticatePasskey() {
   }
 }
 
-async function registerPasskey(email) {
+async function registerPasskey(email, enrollmentToken) {
   if (!window.PublicKeyCredential) return;
   const optRes = await fetch(`${WORKER_URL}/auth/passkey/register-options`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ email }),
+    credentials: 'include',
+    body: JSON.stringify({ email, enrollment_token: enrollmentToken }),
   });
   if (!optRes.ok) return;
   const options = await optRes.json();
@@ -639,7 +643,7 @@ document.getElementById('signupForm').addEventListener('submit', async (e) => {
       msg.textContent = 'Welcome to the porch. Setting up your passkey…';
       e.target.reset();
       try {
-        await registerPasskey(email);
+        await registerPasskey(email, data.enrollment_token);
         msg.textContent = 'Welcome to the porch. Passkey registered — sign in with it next time.';
       } catch {
         msg.textContent = "Welcome to the porch. We'll be in touch.";

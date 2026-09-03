@@ -1,0 +1,543 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Member Area — Front Porch Economics</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;1,400&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --earth: #2C1810;
+    --clay: #8B4513;
+    --straw: #D4A853;
+    --cream: #F5EDD6;
+    --moss: #4A5E3A;
+    --warm-white: #FBF6EC;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { background: var(--warm-white); color: var(--earth); font-family: 'DM Sans', sans-serif; }
+
+  /* ── NAV ─────────────────────────────────────────────────── */
+  nav {
+    position: fixed; top: 0; left: 0; right: 0; z-index: 100;
+    padding: 1.2rem 2rem; display: flex; justify-content: space-between; align-items: center;
+    background: rgba(251,246,236,0.95); backdrop-filter: blur(8px);
+    border-bottom: 1px solid rgba(44,24,16,0.08);
+  }
+  .nav-logo { font-family: 'Playfair Display', serif; font-size: 1.1rem; font-weight: 700; color: var(--earth); text-decoration: none; }
+  .nav-logo span { color: var(--clay); }
+  .nav-right { display: flex; align-items: center; gap: 0.75rem; }
+  .nav-user { font-size: 0.85rem; color: var(--clay); font-weight: 500; }
+  .nav-signout { background: transparent; color: #a08070; border: none; padding: 0.4rem 0; font-family: 'DM Sans', sans-serif; font-size: 0.8rem; cursor: pointer; text-decoration: underline; transition: color 0.2s; }
+  .nav-signout:hover { color: var(--clay); }
+
+  /* ── LAYOUT ──────────────────────────────────────────────── */
+  .page { display: grid; grid-template-columns: 220px 1fr; min-height: 100vh; padding-top: 74px; }
+
+  /* ── SIDEBAR ─────────────────────────────────────────────── */
+  .sidebar {
+    background: var(--cream); border-right: 1px solid rgba(44,24,16,0.1);
+    padding: 2.5rem 0; position: sticky; top: 74px; height: calc(100vh - 74px);
+  }
+  .sidebar-label { font-size: 0.68rem; letter-spacing: 0.14em; text-transform: uppercase; color: #a08070; padding: 0 1.5rem; margin-bottom: 0.75rem; margin-top: 1.25rem; }
+  .sidebar-label:first-child { margin-top: 0; }
+  .tab-btn {
+    display: block; width: 100%; text-align: left;
+    padding: 0.75rem 1.5rem; border: none; background: none;
+    font-family: 'DM Sans', sans-serif; font-size: 0.9rem; color: #6b4a35;
+    cursor: pointer; transition: all 0.15s; border-left: 3px solid transparent;
+  }
+  .tab-btn:hover { background: rgba(44,24,16,0.04); color: var(--earth); }
+  .tab-btn.active { color: var(--earth); font-weight: 500; border-left-color: var(--clay); background: rgba(139,69,19,0.06); }
+
+  /* ── CONTENT ─────────────────────────────────────────────── */
+  .content { padding: 3rem 3.5rem; max-width: 820px; }
+  .content-section { display: none; }
+  .content-section.active { display: block; }
+
+  .section-title { font-family: 'Playfair Display', serif; font-size: 1.8rem; color: var(--earth); margin-bottom: 0.4rem; }
+  .section-sub { font-size: 0.88rem; color: #8a6a55; margin-bottom: 2.5rem; font-weight: 300; }
+
+  /* ── PROFILE ─────────────────────────────────────────────── */
+  .profile-field { margin-bottom: 1.5rem; }
+  .field-label { font-size: 0.72rem; letter-spacing: 0.1em; text-transform: uppercase; color: var(--clay); margin-bottom: 0.35rem; }
+  .field-value { font-size: 0.95rem; color: var(--earth); line-height: 1.6; min-height: 1.4em; }
+  .field-value.empty { color: #b09080; font-style: italic; }
+  .field-input {
+    width: 100%; padding: 0.8rem 1rem;
+    border: 1.5px solid rgba(44,24,16,0.2); font-family: 'DM Sans', sans-serif;
+    font-size: 0.9rem; background: var(--warm-white); color: var(--earth);
+    outline: none; transition: border-color 0.2s; resize: none;
+  }
+  .field-input:focus { border-color: var(--clay); }
+  .field-input::placeholder { color: #b09080; }
+
+  .profile-actions { display: flex; gap: 0.75rem; margin-top: 2rem; }
+  .btn-edit { background: var(--earth); color: var(--cream); border: none; padding: 0.75rem 1.5rem; font-family: 'DM Sans', sans-serif; font-size: 0.85rem; font-weight: 500; cursor: pointer; letter-spacing: 0.04em; transition: background 0.2s; }
+  .btn-edit:hover { background: var(--clay); }
+  .btn-save { background: var(--moss); color: var(--cream); border: none; padding: 0.75rem 1.5rem; font-family: 'DM Sans', sans-serif; font-size: 0.85rem; font-weight: 500; cursor: pointer; letter-spacing: 0.04em; transition: background 0.2s; }
+  .btn-save:hover { background: #3a4e2a; }
+  .btn-save:disabled { opacity: 0.5; cursor: not-allowed; }
+  .btn-cancel { background: transparent; color: #a08070; border: 1px solid rgba(44,24,16,0.2); padding: 0.75rem 1.2rem; font-family: 'DM Sans', sans-serif; font-size: 0.85rem; cursor: pointer; transition: all 0.2s; }
+  .btn-cancel:hover { border-color: var(--clay); color: var(--clay); }
+
+  .profile-msg { margin-top: 1rem; padding: 0.75rem 1rem; font-size: 0.85rem; display: none; }
+  .profile-msg.success { background: rgba(74,94,58,0.1); border: 1px solid rgba(74,94,58,0.4); color: var(--moss); display: block; }
+  .profile-msg.error { background: rgba(139,69,19,0.08); border: 1px solid rgba(139,69,19,0.3); color: var(--clay); display: block; }
+
+  /* ── DIRECTORY ───────────────────────────────────────────── */
+  .member-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 1.25rem; }
+  .member-card { background: var(--cream); padding: 1.5rem; border-left: 3px solid var(--straw); }
+  .member-name { font-family: 'Playfair Display', serif; font-size: 1.05rem; color: var(--earth); margin-bottom: 0.25rem; }
+  .member-neighborhood { font-size: 0.78rem; letter-spacing: 0.06em; text-transform: uppercase; color: var(--clay); margin-bottom: 0.75rem; }
+  .member-building { font-size: 0.85rem; color: #6b4a35; line-height: 1.5; font-weight: 300; }
+
+  /* ── LINKS ───────────────────────────────────────────────── */
+  .add-link-form { background: var(--cream); padding: 1.75rem; margin-bottom: 2.5rem; }
+  .add-link-form h3 { font-family: 'Playfair Display', serif; font-size: 1.1rem; margin-bottom: 1.25rem; color: var(--earth); }
+  .link-form-fields { display: flex; flex-direction: column; gap: 0.9rem; }
+  .link-form-fields input, .link-form-fields textarea {
+    width: 100%; padding: 0.75rem 1rem;
+    border: 1.5px solid rgba(44,24,16,0.18); font-family: 'DM Sans', sans-serif;
+    font-size: 0.88rem; background: var(--warm-white); color: var(--earth);
+    outline: none; transition: border-color 0.2s; resize: none;
+  }
+  .link-form-fields input:focus, .link-form-fields textarea:focus { border-color: var(--clay); }
+  .link-form-fields input::placeholder, .link-form-fields textarea::placeholder { color: #b09080; }
+  .btn-add-link { background: var(--earth); color: var(--cream); border: none; padding: 0.75rem 1.5rem; font-family: 'DM Sans', sans-serif; font-size: 0.85rem; font-weight: 500; cursor: pointer; transition: background 0.2s; }
+  .btn-add-link:hover { background: var(--clay); }
+  .btn-add-link:disabled { opacity: 0.5; cursor: not-allowed; }
+
+  .links-list { display: flex; flex-direction: column; gap: 0.9rem; }
+  .link-item { background: var(--cream); padding: 1.25rem 1.5rem; display: flex; justify-content: space-between; align-items: flex-start; gap: 1rem; border-left: 3px solid rgba(44,24,16,0.12); }
+  .link-item:hover { border-left-color: var(--straw); }
+  .link-body { flex: 1; min-width: 0; }
+  .link-title { font-weight: 500; color: var(--earth); margin-bottom: 0.2rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .link-url { font-size: 0.8rem; color: var(--clay); text-decoration: none; display: block; margin-bottom: 0.4rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .link-url:hover { text-decoration: underline; }
+  .link-notes { font-size: 0.83rem; color: #8a6a55; line-height: 1.5; font-weight: 300; }
+  .btn-delete-link { background: none; border: none; color: #b09080; font-size: 1.1rem; cursor: pointer; padding: 0.2rem; line-height: 1; transition: color 0.2s; flex-shrink: 0; }
+  .btn-delete-link:hover { color: #9b2020; }
+
+  /* ── STATES ──────────────────────────────────────────────── */
+  .state-loading { color: #a08070; font-size: 0.9rem; font-style: italic; padding: 2rem 0; }
+  .state-empty { color: #a08070; font-size: 0.9rem; padding: 2rem 0; }
+
+  /* ── GATE ────────────────────────────────────────────────── */
+  .gate {
+    display: none; min-height: 100vh; padding-top: 74px;
+    align-items: center; justify-content: center; flex-direction: column;
+    text-align: center; gap: 1rem; padding: 120px 2rem 4rem;
+  }
+  .gate.visible { display: flex; }
+  .gate h2 { font-family: 'Playfair Display', serif; font-size: 1.8rem; color: var(--earth); }
+  .gate p { color: #8a6a55; font-size: 0.95rem; }
+  .gate a { color: var(--clay); font-weight: 500; }
+
+  /* ── MOBILE ──────────────────────────────────────────────── */
+  @media (max-width: 768px) {
+    .page { grid-template-columns: 1fr; }
+    .sidebar { position: static; height: auto; padding: 0; border-right: none; border-bottom: 1px solid rgba(44,24,16,0.1); display: flex; overflow-x: auto; }
+    .sidebar-label { display: none; }
+    .tab-btn { white-space: nowrap; border-left: none; border-bottom: 3px solid transparent; padding: 1rem 1.25rem; }
+    .tab-btn.active { border-bottom-color: var(--clay); border-left-color: transparent; background: none; }
+    .content { padding: 1.75rem 1.25rem; }
+    nav { padding: 1rem 1.25rem; }
+    .member-grid { grid-template-columns: 1fr; }
+  }
+</style>
+</head>
+<body>
+
+<!-- auth gate — shown when not logged in -->
+<div class="gate" id="gate">
+  <h2>Members only</h2>
+  <p>You need to be signed in to view this page.</p>
+  <p><a href="/">← Back to the porch</a></p>
+</div>
+
+<!-- nav — shown when logged in -->
+<nav id="memberNav" hidden>
+  <a class="nav-logo" href="/">Front Porch <span>Economics</span></a>
+  <div class="nav-right">
+    <span class="nav-user" id="navUser"></span>
+    <button class="nav-signout" onclick="signOut()">Sign out</button>
+  </div>
+</nav>
+
+<!-- dashboard — shown when logged in -->
+<div class="page" id="dashboard" hidden>
+  <aside class="sidebar">
+    <div class="sidebar-label">Your account</div>
+    <button class="tab-btn active" data-tab="profile" onclick="switchTab('profile')">Profile</button>
+    <div class="sidebar-label">Explore</div>
+    <button class="tab-btn" data-tab="directory" onclick="switchTab('directory')">Member Directory</button>
+    <button class="tab-btn" data-tab="links" onclick="switchTab('links')">Saved Links</button>
+  </aside>
+
+  <main class="content">
+    <!-- Profile Tab -->
+    <section class="content-section active" id="tab-profile">
+      <h1 class="section-title">Your Profile</h1>
+      <p class="section-sub">How you appear to other members.</p>
+
+      <div class="profile-field">
+        <div class="field-label">Name</div>
+        <div class="field-value" id="view-name"></div>
+        <input class="field-input" id="edit-name" type="text" placeholder="Your name" hidden />
+      </div>
+      <div class="profile-field">
+        <div class="field-label">Email</div>
+        <div class="field-value" id="view-email"></div>
+      </div>
+      <div class="profile-field">
+        <div class="field-label">Neighborhood</div>
+        <div class="field-value" id="view-neighborhood"></div>
+        <input class="field-input" id="edit-neighborhood" type="text" placeholder="e.g. Roxbury, Dorchester…" hidden />
+      </div>
+      <div class="profile-field">
+        <div class="field-label">What you're building</div>
+        <div class="field-value" id="view-building"></div>
+        <textarea class="field-input" id="edit-building" rows="4" placeholder="A cooperative, a campaign, a platform…" hidden></textarea>
+      </div>
+
+      <div class="profile-actions" id="profileActions">
+        <button class="btn-edit" onclick="startEdit()">Edit Profile</button>
+      </div>
+      <div class="profile-msg" id="profileMsg"></div>
+    </section>
+
+    <!-- Directory Tab -->
+    <section class="content-section" id="tab-directory">
+      <h1 class="section-title">Member Directory</h1>
+      <p class="section-sub">People building in Boston and beyond.</p>
+      <div id="directoryContent"><p class="state-loading">Loading…</p></div>
+    </section>
+
+    <!-- Links Tab -->
+    <section class="content-section" id="tab-links">
+      <h1 class="section-title">Saved Links</h1>
+      <p class="section-sub">Resources and references you've saved.</p>
+
+      <div class="add-link-form">
+        <h3>Add a link</h3>
+        <div class="link-form-fields">
+          <input type="url" id="newUrl" placeholder="https://…" />
+          <input type="text" id="newTitle" placeholder="Title (optional)" />
+          <textarea id="newNotes" rows="2" placeholder="Notes (optional)"></textarea>
+        </div>
+        <div style="margin-top:1rem;">
+          <button class="btn-add-link" id="addLinkBtn" onclick="addLink()">Save Link</button>
+        </div>
+      </div>
+
+      <div id="linksContent"><p class="state-loading">Loading…</p></div>
+    </section>
+  </main>
+</div>
+
+<script>
+const WORKER_URL = '';
+
+let currentUser = null;
+let directoryLoaded = false;
+let linksLoaded = false;
+
+// ── INIT ──────────────────────────────────────────────────
+
+async function init() {
+  try {
+    const res = await fetch(`${WORKER_URL}/auth/me`, { credentials: 'include' });
+    if (!res.ok) {
+      document.getElementById('gate').classList.add('visible');
+      return;
+    }
+    const data = await res.json();
+    if (!data.success) {
+      document.getElementById('gate').classList.add('visible');
+      return;
+    }
+    currentUser = data;
+    showDashboard();
+  } catch {
+    document.getElementById('gate').classList.add('visible');
+  }
+}
+
+function showDashboard() {
+  const display = currentUser.name
+    ? currentUser.name.split(' ')[0]
+    : currentUser.email.split('@')[0];
+  document.getElementById('navUser').textContent = `Hi, ${display}`;
+  document.getElementById('memberNav').hidden = false;
+  document.getElementById('dashboard').hidden = false;
+  populateProfile();
+}
+
+async function signOut() {
+  try {
+    await fetch(`${WORKER_URL}/auth/logout`, { method: 'POST', credentials: 'include' });
+  } catch {}
+  window.location.href = '/';
+}
+
+// ── TABS ──────────────────────────────────────────────────
+
+function switchTab(name) {
+  document.querySelectorAll('.tab-btn').forEach(b => b.classList.toggle('active', b.dataset.tab === name));
+  document.querySelectorAll('.content-section').forEach(s => s.classList.toggle('active', s.id === `tab-${name}`));
+  if (name === 'directory' && !directoryLoaded) loadDirectory();
+  if (name === 'links' && !linksLoaded) loadLinks();
+}
+
+// ── PROFILE ───────────────────────────────────────────────
+
+function populateProfile() {
+  setFieldView('name', currentUser.name);
+  document.getElementById('view-email').textContent = currentUser.email;
+  setFieldView('neighborhood', currentUser.neighborhood);
+  setFieldView('building', currentUser.building);
+}
+
+function setFieldView(field, value) {
+  const el = document.getElementById(`view-${field}`);
+  if (value) {
+    el.textContent = value;
+    el.classList.remove('empty');
+  } else {
+    el.textContent = '—';
+    el.classList.add('empty');
+  }
+}
+
+function startEdit() {
+  ['name', 'neighborhood', 'building'].forEach(f => {
+    const view = document.getElementById(`view-${f}`);
+    const input = document.getElementById(`edit-${f}`);
+    input.value = currentUser[f] || '';
+    view.hidden = true;
+    input.hidden = false;
+  });
+  document.getElementById('profileActions').innerHTML = `
+    <button class="btn-save" id="saveBtn" onclick="saveProfile()">Save</button>
+    <button class="btn-cancel" onclick="cancelEdit()">Cancel</button>
+  `;
+  clearMsg('profileMsg');
+}
+
+function cancelEdit() {
+  ['name', 'neighborhood', 'building'].forEach(f => {
+    document.getElementById(`view-${f}`).hidden = false;
+    document.getElementById(`edit-${f}`).hidden = true;
+  });
+  document.getElementById('profileActions').innerHTML =
+    `<button class="btn-edit" onclick="startEdit()">Edit Profile</button>`;
+  clearMsg('profileMsg');
+}
+
+async function saveProfile() {
+  const btn = document.getElementById('saveBtn');
+  btn.disabled = true;
+  btn.textContent = 'Saving…';
+  clearMsg('profileMsg');
+
+  const body = {
+    name: document.getElementById('edit-name').value.trim(),
+    neighborhood: document.getElementById('edit-neighborhood').value.trim(),
+    building: document.getElementById('edit-building').value.trim(),
+  };
+
+  try {
+    const res = await fetch(`${WORKER_URL}/auth/profile`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      credentials: 'include',
+      body: JSON.stringify(body),
+    });
+    const data = await res.json();
+    if (data.success) {
+      currentUser = { ...currentUser, ...body };
+      cancelEdit();
+      populateProfile();
+      setMsg('profileMsg', 'Profile updated.', 'success');
+    } else {
+      setMsg('profileMsg', data.error || 'Could not save. Try again.', 'error');
+      btn.disabled = false;
+      btn.textContent = 'Save';
+    }
+  } catch {
+    setMsg('profileMsg', 'Could not connect. Try again.', 'error');
+    btn.disabled = false;
+    btn.textContent = 'Save';
+  }
+}
+
+// ── DIRECTORY ─────────────────────────────────────────────
+
+async function loadDirectory() {
+  try {
+    const res = await fetch(`${WORKER_URL}/members`, { credentials: 'include' });
+    const data = await res.json();
+    const el = document.getElementById('directoryContent');
+    if (!data.success || !data.members.length) {
+      el.innerHTML = '<p class="state-empty">No members found yet.</p>';
+    } else {
+      el.innerHTML = `<div class="member-grid">${data.members.map(renderMemberCard).join('')}</div>`;
+    }
+    directoryLoaded = true;
+  } catch {
+    document.getElementById('directoryContent').innerHTML =
+      '<p class="state-empty">Could not load directory. Try again.</p>';
+  }
+}
+
+function renderMemberCard(m) {
+  const name = m.name || 'Anonymous member';
+  const neighborhood = m.neighborhood ? `<div class="member-neighborhood">${esc(m.neighborhood)}</div>` : '';
+  const building = m.building ? `<p class="member-building">${esc(m.building)}</p>` : '';
+  return `<div class="member-card">
+    <div class="member-name">${esc(name)}</div>
+    ${neighborhood}
+    ${building}
+  </div>`;
+}
+
+// ── LINKS ─────────────────────────────────────────────────
+
+async function loadLinks() {
+  try {
+    const res = await fetch(`${WORKER_URL}/links`, { credentials: 'include' });
+    const data = await res.json();
+    renderLinks(data.success ? (data.links || []) : []);
+    linksLoaded = true;
+  } catch {
+    document.getElementById('linksContent').innerHTML =
+      '<p class="state-empty">Could not load links. Try again.</p>';
+  }
+}
+
+function renderLinks(links) {
+  const el = document.getElementById('linksContent');
+  if (!links.length) {
+    el.innerHTML = '<p class="state-empty">No saved links yet. Add one above.</p>';
+    return;
+  }
+  el.innerHTML = `<div class="links-list">${links.map(renderLinkItem).join('')}</div>`;
+}
+
+function renderLinkItem(link) {
+  const title = link.title || truncateUrl(link.url);
+  const notes = link.notes ? `<p class="link-notes">${esc(link.notes)}</p>` : '';
+  return `<div class="link-item" id="link-${esc(link.id)}">
+    <div class="link-body">
+      <div class="link-title">${esc(title)}</div>
+      <a class="link-url" href="${esc(link.url)}" target="_blank" rel="noopener">${esc(link.url)}</a>
+      ${notes}
+    </div>
+    <button class="btn-delete-link" onclick="deleteLink('${esc(link.id)}')" title="Delete">×</button>
+  </div>`;
+}
+
+async function addLink() {
+  const urlVal = document.getElementById('newUrl').value.trim();
+  if (!urlVal) {
+    document.getElementById('newUrl').focus();
+    return;
+  }
+  const btn = document.getElementById('addLinkBtn');
+  btn.disabled = true;
+  btn.textContent = 'Saving…';
+
+  const body = {
+    url: urlVal,
+    title: document.getElementById('newTitle').value.trim(),
+    notes: document.getElementById('newNotes').value.trim(),
+  };
+
+  try {
+    const res = await fetch(`${WORKER_URL}/links`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      credentials: 'include',
+      body: JSON.stringify(body),
+    });
+    const data = await res.json();
+    if (data.success) {
+      document.getElementById('newUrl').value = '';
+      document.getElementById('newTitle').value = '';
+      document.getElementById('newNotes').value = '';
+      prependLink(data.link);
+    }
+  } catch {}
+
+  btn.disabled = false;
+  btn.textContent = 'Save Link';
+}
+
+function prependLink(link) {
+  const el = document.getElementById('linksContent');
+  const existing = el.querySelector('.links-list');
+  const emptyMsg = el.querySelector('.state-empty');
+  if (emptyMsg) el.innerHTML = '<div class="links-list"></div>';
+  const list = el.querySelector('.links-list');
+  const item = document.createElement('div');
+  item.outerHTML; // no-op; use insertAdjacentHTML
+  list.insertAdjacentHTML('afterbegin', renderLinkItem(link));
+}
+
+async function deleteLink(id) {
+  const el = document.getElementById(`link-${id}`);
+  if (el) el.style.opacity = '0.4';
+
+  try {
+    await fetch(`${WORKER_URL}/links/${id}`, {
+      method: 'DELETE',
+      credentials: 'include',
+    });
+    if (el) {
+      el.remove();
+      const list = document.querySelector('.links-list');
+      if (list && !list.children.length) {
+        document.getElementById('linksContent').innerHTML =
+          '<p class="state-empty">No saved links yet. Add one above.</p>';
+      }
+    }
+  } catch {
+    if (el) el.style.opacity = '1';
+  }
+}
+
+// ── UTILS ─────────────────────────────────────────────────
+
+function esc(str) {
+  return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+function truncateUrl(url) {
+  try {
+    const u = new URL(url);
+    return u.hostname + (u.pathname !== '/' ? u.pathname : '');
+  } catch {
+    return url.length > 60 ? url.slice(0, 60) + '…' : url;
+  }
+}
+
+function setMsg(id, text, type) {
+  const el = document.getElementById(id);
+  el.textContent = text;
+  el.className = `profile-msg ${type}`;
+}
+
+function clearMsg(id) {
+  const el = document.getElementById(id);
+  el.textContent = '';
+  el.className = 'profile-msg';
+}
+
+// ── START ─────────────────────────────────────────────────
+
+init();
+</script>
+</body>
+</html>
