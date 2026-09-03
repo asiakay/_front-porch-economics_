@@ -173,6 +173,18 @@ function derToRaw(der) {
   return raw;
 }
 
+// Timing-safe string equality via HMAC — prevents oracle attacks on token comparison
+async function timingSafeEqual(a, b) {
+  const key = await crypto.subtle.generateKey({ name: 'HMAC', hash: 'SHA-256' }, false, ['sign']);
+  const enc = new TextEncoder();
+  const [sigA, sigB] = await Promise.all([
+    crypto.subtle.sign('HMAC', key, enc.encode(a)),
+    crypto.subtle.sign('HMAC', key, enc.encode(b)),
+  ]);
+  const ua = new Uint8Array(sigA), ub = new Uint8Array(sigB);
+  return ua.length === ub.length && ua.every((v, i) => v === ub[i]);
+}
+
 function getRpId(origin) {
   if (!origin) return 'front-porch-economics.pages.dev';
   try { return new URL(origin).hostname; } catch { return 'front-porch-economics.pages.dev'; }
@@ -234,11 +246,18 @@ async function handleSignup(request, env, cors) {
   const existing = await getUserByEmail(env.DB, email);
   if (existing) return json({ success: false, error: 'Already on the list.' }, 409, cors);
 
+  // Single-use token that permits the first passkey enrollment for this account.
+  // Hashed before storage so DB exposure can't yield a usable token.
+  const enrollmentToken = b64url(crypto.getRandomValues(new Uint8Array(24)));
+  const tokenHashBuf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(enrollmentToken));
+  const tokenHash = b64url(tokenHashBuf);
+  const now = Math.floor(Date.now() / 1000);
+
   try {
     await env.DB.prepare(
-      'INSERT INTO signups (email, name, neighborhood, building, phone) VALUES (?, ?, ?, ?, ?)'
-    ).bind(email, name || null, neighborhood || null, building || null, phone).run();
-    return json({ success: true, message: 'Welcome to the porch.' }, 200, cors);
+      'INSERT INTO signups (email, name, neighborhood, building, phone, enrollment_token, enrollment_token_exp) VALUES (?, ?, ?, ?, ?, ?, ?)'
+    ).bind(email, name || null, neighborhood || null, building || null, phone, tokenHash, now + 600).run();
+    return json({ success: true, message: 'Welcome to the porch.', enrollment_token: enrollmentToken }, 200, cors);
   } catch (err) {
     if (err.message?.includes('UNIQUE')) return json({ success: false, error: 'Already on the list.' }, 409, cors);
     throw err;
@@ -246,12 +265,34 @@ async function handleSignup(request, env, cors) {
 }
 
 async function handlePasskeyRegisterOptions(request, env, cors) {
-  const { email } = await request.json();
-  const normalEmail = normalizeEmail(email);
+  const body = await request.json();
+  const normalEmail = normalizeEmail(body.email);
   if (!isValidEmail(normalEmail)) return json({ error: 'Valid email required' }, 400, cors);
 
   const user = await getUserByEmail(env.DB, normalEmail);
   if (!user) return json({ error: 'Email not found. Sign up first.' }, 404, cors);
+
+  // Gate: either an existing authenticated session for this account, or a
+  // valid single-use enrollment token issued by /signup.
+  const auth = await requireAuth(request, env);
+  if (auth) {
+    if (normalizeEmail(auth.email) !== normalEmail) return json({ error: 'Session email mismatch.' }, 403, cors);
+  } else {
+    const submitted = typeof body.enrollment_token === 'string' ? body.enrollment_token : '';
+    if (!submitted) return json({ error: 'Authentication required to register a passkey.' }, 401, cors);
+    const tokenNow = Math.floor(Date.now() / 1000);
+    if (!user.enrollment_token || !user.enrollment_token_exp || user.enrollment_token_exp < tokenNow) {
+      return json({ error: 'Enrollment token expired or not found.' }, 401, cors);
+    }
+    const submittedHash = b64url(await crypto.subtle.digest('SHA-256', new TextEncoder().encode(submitted)));
+    if (!await timingSafeEqual(submittedHash, user.enrollment_token)) {
+      return json({ error: 'Invalid enrollment token.' }, 401, cors);
+    }
+    // Consume the token — single-use prevents replay for a second challenge
+    await env.DB.prepare(
+      'UPDATE signups SET enrollment_token = NULL, enrollment_token_exp = NULL WHERE lower(email) = lower(?)'
+    ).bind(normalEmail).run();
+  }
 
   const challengeBytes = crypto.getRandomValues(new Uint8Array(32));
   const challenge = b64url(challengeBytes);
@@ -332,7 +373,7 @@ async function handlePasskeyRegisterFinish(request, env, cors) {
   ).bind(credentialIdB64, normalEmail, pubKeyB64, transports, now).run();
 
   await env.DB.prepare(
-    'UPDATE signups SET webauthn_challenge = NULL, webauthn_challenge_exp = NULL WHERE lower(email) = lower(?)'
+    'UPDATE signups SET webauthn_challenge = NULL, webauthn_challenge_exp = NULL, enrollment_token = NULL, enrollment_token_exp = NULL WHERE lower(email) = lower(?)'
   ).bind(normalEmail).run();
 
   return json({ success: true }, 200, cors);

@@ -577,12 +577,13 @@ async function authenticatePasskey() {
   }
 }
 
-async function registerPasskey(email) {
+async function registerPasskey(email, enrollmentToken) {
   if (!window.PublicKeyCredential) return;
   const optRes = await fetch(`${WORKER_URL}/auth/passkey/register-options`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ email }),
+    credentials: 'include',
+    body: JSON.stringify({ email, enrollment_token: enrollmentToken }),
   });
   if (!optRes.ok) return;
   const options = await optRes.json();
@@ -642,7 +643,7 @@ document.getElementById('signupForm').addEventListener('submit', async (e) => {
       msg.textContent = 'Welcome to the porch. Setting up your passkey…';
       e.target.reset();
       try {
-        await registerPasskey(email);
+        await registerPasskey(email, data.enrollment_token);
         msg.textContent = 'Welcome to the porch. Passkey registered — sign in with it next time.';
       } catch {
         msg.textContent = "Welcome to the porch. We'll be in touch.";
