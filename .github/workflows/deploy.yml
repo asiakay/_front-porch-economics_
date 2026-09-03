@@ -34,15 +34,15 @@ jobs:
           add_column_if_missing pin_attempts "INTEGER NOT NULL DEFAULT 0"
           add_column_if_missing pin_requested_at "INTEGER"
 
+      - name: Deploy Worker + Assets
+        uses: cloudflare/wrangler-action@v3
+        with:
+          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          accountId: 6d42189fc4724a2d0ad8650b53814692
+
       - name: Provision Worker secrets
         run: |
           echo "${{ secrets.JWT_SECRET }}"          | npx wrangler secret put JWT_SECRET
           echo "${{ secrets.TWILIO_ACCOUNT_SID }}"  | npx wrangler secret put TWILIO_ACCOUNT_SID
           echo "${{ secrets.TWILIO_AUTH_TOKEN }}"   | npx wrangler secret put TWILIO_AUTH_TOKEN
           echo "${{ secrets.TWILIO_FROM_NUMBER }}"  | npx wrangler secret put TWILIO_FROM_NUMBER
-
-      - name: Deploy Worker + Assets
-        uses: cloudflare/wrangler-action@v3
-        with:
-          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
-          accountId: 6d42189fc4724a2d0ad8650b53814692
