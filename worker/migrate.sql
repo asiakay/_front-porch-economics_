@@ -3,19 +3,21 @@
 -- Fresh install (new database):
 --   npx wrangler d1 execute front-porch-economics --remote --file=worker/migrate.sql
 --
--- Existing database (already has signups table without phone/pin columns):
---   Run only the ALTER TABLE lines at the bottom of this file.
---   The CREATE TABLE IF NOT EXISTS blocks are safe to re-run — they skip existing tables.
+-- Existing database:
+--   Run the ALTER TABLE statements at the bottom once for any missing columns.
+--   The CREATE TABLE IF NOT EXISTS blocks are safe to re-run.
 
 CREATE TABLE IF NOT EXISTS signups (
-  email            TEXT PRIMARY KEY,
-  name             TEXT,
-  neighborhood     TEXT,
-  building         TEXT,
-  phone            TEXT,
-  pin              TEXT,
-  pin_expires_at   INTEGER,
-  created_at       INTEGER NOT NULL DEFAULT (unixepoch())
+  email              TEXT PRIMARY KEY,
+  name               TEXT,
+  neighborhood       TEXT,
+  building           TEXT,
+  phone               TEXT,
+  pin                 TEXT,
+  pin_expires_at      INTEGER,
+  pin_attempts        INTEGER NOT NULL DEFAULT 0,
+  pin_requested_at    INTEGER,
+  created_at          INTEGER NOT NULL DEFAULT (unixepoch())
 );
 
 CREATE TABLE IF NOT EXISTS sessions (
@@ -37,7 +39,9 @@ CREATE TABLE IF NOT EXISTS saved_links (
 );
 
 -- Existing DB only: add missing columns to signups.
--- These error if columns already exist — safe to ignore those errors.
+-- Run each statement once; SQLite will error if a column already exists.
 -- ALTER TABLE signups ADD COLUMN phone TEXT;
 -- ALTER TABLE signups ADD COLUMN pin TEXT;
 -- ALTER TABLE signups ADD COLUMN pin_expires_at INTEGER;
+-- ALTER TABLE signups ADD COLUMN pin_attempts INTEGER NOT NULL DEFAULT 0;
+-- ALTER TABLE signups ADD COLUMN pin_requested_at INTEGER;
