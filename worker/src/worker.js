@@ -39,13 +39,6 @@ function isValidEmail(email) {
   return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
 }
 
-const ALLOWED_ORIGINS = new Set([
-  'https://frontporcheconomics.com',
-  'https://www.frontporcheconomics.com',
-  'https://front-porch-economics.pages.dev',
-  'http://localhost:8787',
-]);
-
 // ─── CORS ─────────────────────────────────────────────────────────────────────
 
 function corsHeaders(origin, withCredentials = false) {
