@@ -182,6 +182,48 @@
   .form-message.error { background: rgba(139,69,19,0.1); color: var(--clay); border: 1px solid var(--clay); display: block; }
   .form-note { font-size: 0.78rem; color: #a08070; margin-top: 0.5rem; text-align: center; }
 
+  /* ── PROFILE SECTION ────────────────────────────────── */
+  .profile-section { display: none; background: var(--earth); color: var(--cream); padding: 5rem 2rem; }
+  .profile-section.visible { display: block; }
+  .profile-inner { max-width: 680px; margin: 0 auto; }
+  .profile-tag { font-size: 0.72rem; letter-spacing: 0.12em; text-transform: uppercase; color: var(--straw); margin-bottom: 1rem; }
+  .profile-section h2 { font-family: 'Playfair Display', serif; font-size: 2rem; margin-bottom: 0.5rem; }
+  .profile-section .profile-sub { font-size: 0.95rem; color: rgba(245,237,214,0.65); margin-bottom: 2.5rem; font-weight: 300; line-height: 1.6; }
+  .profile-section .section-divider { border: none; border-top: 1px solid rgba(245,237,214,0.12); margin: 2rem 0; }
+  .profile-group { display: flex; flex-direction: column; gap: 0.5rem; margin-bottom: 1.5rem; }
+  .profile-group label { font-size: 0.72rem; letter-spacing: 0.1em; text-transform: uppercase; color: rgba(212,168,83,0.8); }
+  .profile-group .label-note { font-size: 0.8rem; color: rgba(245,237,214,0.45); text-transform: none; letter-spacing: 0; margin-top: -0.25rem; }
+  .profile-group input, .profile-group select, .profile-group textarea {
+    padding: 0.85rem 1rem; background: rgba(245,237,214,0.06);
+    border: 1px solid rgba(245,237,214,0.18); color: var(--cream);
+    font-family: 'DM Sans', sans-serif; font-size: 0.9rem; outline: none;
+    transition: border-color 0.2s; resize: none;
+  }
+  .profile-group input:focus, .profile-group select, .profile-group textarea:focus { border-color: var(--straw); }
+  .profile-group input::placeholder, .profile-group textarea::placeholder { color: rgba(245,237,214,0.25); }
+  .profile-group select { appearance: none; -webkit-appearance: none; cursor: pointer; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M0 0l5 6 5-6z' fill='rgba(245,237,214,0.4)'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 1rem center; padding-right: 2.5rem; }
+  .profile-group select option { background: #2C1810; }
+  .wealth-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 0.5rem; }
+  .wealth-option { display: flex; align-items: center; gap: 0.6rem; padding: 0.65rem 0.85rem; border: 1px solid rgba(245,237,214,0.15); cursor: pointer; transition: border-color 0.2s, background 0.2s; }
+  .wealth-option:hover { border-color: rgba(245,237,214,0.35); }
+  .wealth-option input[type="checkbox"] { accent-color: var(--straw); width: 1rem; height: 1rem; flex-shrink: 0; cursor: pointer; }
+  .wealth-option.checked { border-color: var(--straw); background: rgba(212,168,83,0.08); }
+  .wealth-option span { font-size: 0.88rem; color: rgba(245,237,214,0.85); }
+  .connect-grid { display: flex; flex-direction: column; gap: 0.5rem; }
+  .connect-option { display: flex; align-items: center; gap: 0.7rem; padding: 0.6rem 0.85rem; border: 1px solid rgba(245,237,214,0.12); cursor: pointer; }
+  .connect-option:hover { border-color: rgba(245,237,214,0.3); }
+  .connect-option input[type="checkbox"] { accent-color: var(--straw); width: 1rem; height: 1rem; flex-shrink: 0; cursor: pointer; }
+  .connect-option.checked { border-color: var(--straw); background: rgba(212,168,83,0.06); }
+  .connect-option span { font-size: 0.88rem; color: rgba(245,237,214,0.85); }
+  .profile-save-btn { background: var(--straw); color: var(--earth); border: none; padding: 1rem 2rem; font-family: 'DM Sans', sans-serif; font-size: 0.9rem; font-weight: 500; cursor: pointer; letter-spacing: 0.04em; transition: background 0.2s; margin-top: 0.5rem; }
+  .profile-save-btn:hover { background: #c49840; }
+  .profile-save-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+  .profile-save-msg { font-size: 0.85rem; padding: 0.75rem 1rem; margin-top: 0.75rem; display: none; }
+  .profile-save-msg.success { background: rgba(74,94,58,0.25); border: 1px solid rgba(74,94,58,0.5); color: #a8c99a; display: block; }
+  .profile-save-msg.error { background: rgba(139,69,19,0.25); border: 1px solid rgba(139,69,19,0.5); color: #f4b885; display: block; }
+  .nav-profile-btn { background: transparent; color: var(--cream); border: 1px solid rgba(245,237,214,0.3); padding: 0.4rem 1rem; font-family: 'DM Sans', sans-serif; font-size: 0.8rem; cursor: pointer; transition: all 0.2s; }
+  .nav-profile-btn:hover { border-color: var(--straw); color: var(--straw); }
+
   footer { background: var(--cream); border-top: 1px solid rgba(44,24,16,0.1); padding: 2rem 4rem; display: flex; justify-content: space-between; align-items: center; }
   .footer-logo { font-family: 'Playfair Display', serif; font-size: 1rem; color: var(--earth); }
   .footer-note { font-size: 0.78rem; color: #a08070; }
@@ -376,6 +418,93 @@
   </form>
 </section>
 
+<!-- ── MEMBER PROFILE ──────────────────────────────────────── -->
+<section class="profile-section" id="profileSection">
+  <div class="profile-inner">
+    <div class="profile-tag">Your Porch Profile</div>
+    <h2>Tell us more about your work.</h2>
+    <p class="profile-sub">This is optional and never public without your permission. It helps us understand what the community actually has — and what it actually needs.</p>
+
+    <form id="profileForm">
+
+      <!-- Wealth -->
+      <div class="profile-group">
+        <label>What does wealth mean to you?</label>
+        <p class="label-note">Choose up to 3.</p>
+        <div class="wealth-grid" id="wealthGrid">
+          <label class="wealth-option"><input type="checkbox" name="wealth" value="financial_security"><span>Financial security</span></label>
+          <label class="wealth-option"><input type="checkbox" name="wealth" value="family_community"><span>Family &amp; community</span></label>
+          <label class="wealth-option"><input type="checkbox" name="wealth" value="health"><span>Health</span></label>
+          <label class="wealth-option"><input type="checkbox" name="wealth" value="spiritual_peace"><span>Spiritual peace</span></label>
+          <label class="wealth-option"><input type="checkbox" name="wealth" value="ownership"><span>Ownership</span></label>
+          <label class="wealth-option"><input type="checkbox" name="wealth" value="creative_freedom"><span>Creative freedom</span></label>
+        </div>
+      </div>
+
+      <hr class="section-divider">
+
+      <!-- Barriers -->
+      <div class="profile-group">
+        <label>What's the biggest wall you've hit building it?</label>
+        <select id="barrierType" name="barrier_type">
+          <option value="">Select one</option>
+          <option value="systemic">Systemic — racism in loans, zoning, or contracts</option>
+          <option value="knowledge">Knowledge gap — didn't know the path or the rules</option>
+          <option value="access">Access — no capital, tools, or space</option>
+          <option value="isolation">Isolation — no one around doing this work</option>
+          <option value="other">Other</option>
+        </select>
+      </div>
+      <div class="profile-group">
+        <label>Say more (optional)</label>
+        <textarea id="barrierDetail" name="barrier_detail" rows="3" placeholder="A sentence or two is enough."></textarea>
+      </div>
+
+      <hr class="section-divider">
+
+      <!-- Community Assets -->
+      <div class="profile-group">
+        <label>What does your community have that mainstream systems ignore?</label>
+        <textarea id="communityAssets" name="community_assets" rows="3" placeholder="Informal networks, mutual aid, skills, traditions, cultural infrastructure..."></textarea>
+      </div>
+      <div class="profile-group">
+        <label>Where do people in your world actually go for real financial advice?</label>
+        <textarea id="trustedSpaces" name="trusted_spaces" rows="2" placeholder="A person, a place, a community, a group chat..."></textarea>
+      </div>
+
+      <hr class="section-divider">
+
+      <!-- How to connect -->
+      <div class="profile-group">
+        <label>How do you want to connect with other builders here?</label>
+        <div class="connect-grid" id="connectGrid">
+          <label class="connect-option"><input type="checkbox" name="connect" value="in_person"><span>In-person events</span></label>
+          <label class="connect-option"><input type="checkbox" name="connect" value="introductions"><span>1:1 introductions</span></label>
+          <label class="connect-option"><input type="checkbox" name="connect" value="group_calls"><span>Group calls</span></label>
+          <label class="connect-option"><input type="checkbox" name="connect" value="resource_sharing"><span>Resource sharing</span></label>
+          <label class="connect-option"><input type="checkbox" name="connect" value="async"><span>Async / at my own pace</span></label>
+        </div>
+      </div>
+
+      <hr class="section-divider">
+
+      <!-- Vision -->
+      <div class="profile-group">
+        <label>What does your neighborhood look like in 10 years if things go right?</label>
+        <textarea id="vision10yr" name="vision_10yr" rows="3" placeholder="What's different? Who's there? What changed first?"></textarea>
+      </div>
+      <div class="profile-group">
+        <label>What's one thing that would change everything for you right now?</label>
+        <textarea id="oneChange" name="one_change" rows="2" placeholder="Be specific."></textarea>
+      </div>
+
+      <button type="submit" class="profile-save-btn" id="profileSaveBtn">Save my profile</button>
+      <div class="profile-save-msg" id="profileSaveMsg"></div>
+
+    </form>
+  </div>
+</section>
+
 <footer>
   <div class="footer-logo">Front Porch Economics</div>
   <div class="footer-note">Boston, MA · Building in public · 2026</div>
@@ -408,11 +537,18 @@ function setLoggedIn(nameOrEmail) {
     <a class="nav-member" href="/member">Member Area</a>
     <button class="nav-signout" onclick="signOut()">Sign out</button>
   `;
+  document.getElementById('profileSection').classList.add('visible');
+  loadProfile();
 }
 
 function setLoggedOut() {
   document.getElementById('navAuth').innerHTML =
     `<button class="nav-signin" onclick="openModal()">Sign In</button>`;
+  document.getElementById('profileSection').classList.remove('visible');
+}
+
+function scrollToProfile() {
+  document.getElementById('profileSection').scrollIntoView({ behavior: 'smooth' });
 }
 
 async function signOut() {
@@ -657,6 +793,112 @@ document.getElementById('signupForm').addEventListener('submit', async (e) => {
   } finally {
     btn.disabled = false;
     btn.textContent = 'Join the Porch';
+  }
+});
+
+// ── PROFILE ───────────────────────────────────────────────
+
+function initCheckboxGroup(gridId, maxSelections) {
+  document.getElementById(gridId).addEventListener('change', function (e) {
+    const boxes = this.querySelectorAll('input[type="checkbox"]');
+    const checked = [...boxes].filter(b => b.checked);
+    if (maxSelections && checked.length > maxSelections) {
+      e.target.checked = false;
+      return;
+    }
+    boxes.forEach(b => {
+      b.closest('label').classList.toggle('checked', b.checked);
+    });
+  });
+  // init state for pre-filled values
+  document.getElementById(gridId).querySelectorAll('input[type="checkbox"]').forEach(b => {
+    b.closest('label').classList.toggle('checked', b.checked);
+  });
+}
+
+async function loadProfile() {
+  try {
+    const res = await fetch(`${WORKER_URL}/auth/profile`, { credentials: 'include' });
+    if (!res.ok) return;
+    const { profile } = await res.json();
+    if (!profile) return;
+
+    // wealth priorities
+    if (profile.wealth_priorities) {
+      const priorities = JSON.parse(profile.wealth_priorities);
+      document.querySelectorAll('#wealthGrid input[type="checkbox"]').forEach(b => {
+        b.checked = priorities.includes(b.value);
+        b.closest('label').classList.toggle('checked', b.checked);
+      });
+    }
+
+    // barrier
+    if (profile.barrier_type) document.getElementById('barrierType').value = profile.barrier_type;
+    if (profile.barrier_detail) document.getElementById('barrierDetail').value = profile.barrier_detail;
+
+    // assets
+    if (profile.community_assets) document.getElementById('communityAssets').value = profile.community_assets;
+    if (profile.trusted_spaces) document.getElementById('trustedSpaces').value = profile.trusted_spaces;
+
+    // connect preferences
+    if (profile.tech_preference) {
+      const prefs = JSON.parse(profile.tech_preference);
+      document.querySelectorAll('#connectGrid input[type="checkbox"]').forEach(b => {
+        b.checked = prefs.includes(b.value);
+        b.closest('label').classList.toggle('checked', b.checked);
+      });
+    }
+
+    // vision
+    if (profile.vision_10yr) document.getElementById('vision10yr').value = profile.vision_10yr;
+    if (profile.one_change) document.getElementById('oneChange').value = profile.one_change;
+  } catch {}
+}
+
+initCheckboxGroup('wealthGrid', 3);
+initCheckboxGroup('connectGrid', 0);
+
+document.getElementById('profileForm').addEventListener('submit', async (e) => {
+  e.preventDefault();
+  const btn = document.getElementById('profileSaveBtn');
+  const msg = document.getElementById('profileSaveMsg');
+  btn.disabled = true;
+  btn.textContent = 'Saving…';
+  msg.className = 'profile-save-msg';
+
+  const wealth_priorities = [...document.querySelectorAll('#wealthGrid input:checked')].map(b => b.value);
+  const tech_preference = [...document.querySelectorAll('#connectGrid input:checked')].map(b => b.value);
+
+  try {
+    const res = await fetch(`${WORKER_URL}/auth/profile`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      credentials: 'include',
+      body: JSON.stringify({
+        wealth_priorities,
+        barrier_type: document.getElementById('barrierType').value,
+        barrier_detail: document.getElementById('barrierDetail').value,
+        community_assets: document.getElementById('communityAssets').value,
+        trusted_spaces: document.getElementById('trustedSpaces').value,
+        tech_preference,
+        vision_10yr: document.getElementById('vision10yr').value,
+        one_change: document.getElementById('oneChange').value,
+      }),
+    });
+    const data = await res.json();
+    if (data.success) {
+      msg.className = 'profile-save-msg success';
+      msg.textContent = 'Saved.';
+    } else {
+      msg.className = 'profile-save-msg error';
+      msg.textContent = data.error || 'Could not save. Try again.';
+    }
+  } catch {
+    msg.className = 'profile-save-msg error';
+    msg.textContent = 'Could not connect. Try again.';
+  } finally {
+    btn.disabled = false;
+    btn.textContent = 'Save my profile';
   }
 });
 
