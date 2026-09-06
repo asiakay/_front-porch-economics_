@@ -34,6 +34,9 @@ jobs:
           add_column_if_missing pin_attempts "INTEGER NOT NULL DEFAULT 0"
           add_column_if_missing pin_requested_at "INTEGER"
 
+          # Create profiles table if it doesn't exist yet
+          npx wrangler d1 execute front-porch-economics --remote --command="CREATE TABLE IF NOT EXISTS profiles (email TEXT PRIMARY KEY, wealth_priorities TEXT, barrier_type TEXT, barrier_detail TEXT, community_assets TEXT, trusted_spaces TEXT, tech_preference TEXT, vision_10yr TEXT, one_change TEXT, updated_at INTEGER);"
+
       - name: Deploy Worker + Assets
         uses: cloudflare/wrangler-action@v3
         with:

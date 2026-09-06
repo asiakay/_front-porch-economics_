@@ -387,6 +387,55 @@ async function handleMe(request, env, cors) {
   );
 }
 
+// ─── PROFILE ──────────────────────────────────────────────────────────────────
+
+const getProfile = (db, email) =>
+  db.prepare('SELECT * FROM profiles WHERE email = ?').bind(email).first();
+
+async function upsertProfile(db, email, data) {
+  const now = Math.floor(Date.now() / 1000);
+  const fields = [
+    'wealth_priorities', 'barrier_type', 'barrier_detail',
+    'community_assets', 'trusted_spaces', 'tech_preference',
+    'vision_10yr', 'one_change',
+  ];
+  const values = fields.map(f => {
+    const v = data[f];
+    if (Array.isArray(v)) return JSON.stringify(v);
+    return typeof v === 'string' ? v.trim() || null : null;
+  });
+  await db.prepare(`
+    INSERT INTO profiles (email, wealth_priorities, barrier_type, barrier_detail,
+      community_assets, trusted_spaces, tech_preference, vision_10yr, one_change, updated_at)
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    ON CONFLICT(email) DO UPDATE SET
+      wealth_priorities = excluded.wealth_priorities,
+      barrier_type = excluded.barrier_type,
+      barrier_detail = excluded.barrier_detail,
+      community_assets = excluded.community_assets,
+      trusted_spaces = excluded.trusted_spaces,
+      tech_preference = excluded.tech_preference,
+      vision_10yr = excluded.vision_10yr,
+      one_change = excluded.one_change,
+      updated_at = excluded.updated_at
+  `).bind(email, ...values, now).run();
+}
+
+async function handleGetProfile(request, env, cors) {
+  const auth = await requireAuth(request, env);
+  if (!auth) return json({ success: false, error: 'Not authenticated' }, 401, cors);
+  const profile = await getProfile(env.DB, auth.email);
+  return json({ success: true, profile: profile || null }, 200, cors);
+}
+
+async function handleUpsertProfile(request, env, cors) {
+  const auth = await requireAuth(request, env);
+  if (!auth) return json({ success: false, error: 'Not authenticated' }, 401, cors);
+  const data = await request.json();
+  await upsertProfile(env.DB, auth.email, data);
+  return json({ success: true }, 200, cors);
+}
+
 // ─── ROUTER ───────────────────────────────────────────────────────────────────
 
 export default {
@@ -415,6 +464,12 @@ export default {
       }
       if (request.method === 'GET' && url.pathname === '/auth/me') {
         return await handleMe(request, env, cors);
+      }
+      if (request.method === 'GET' && url.pathname === '/auth/profile') {
+        return await handleGetProfile(request, env, cors);
+      }
+      if (request.method === 'POST' && url.pathname === '/auth/profile') {
+        return await handleUpsertProfile(request, env, cors);
       }
 
       return new Response('Front Porch Economics API', { status: 200 });
