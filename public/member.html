@@ -86,6 +86,47 @@
   .profile-msg.success { background: rgba(74,94,58,0.1); border: 1px solid rgba(74,94,58,0.4); color: var(--moss); display: block; }
   .profile-msg.error { background: rgba(139,69,19,0.08); border: 1px solid rgba(139,69,19,0.3); color: var(--clay); display: block; }
 
+  /* ── COMMUNITY VOICE ─────────────────────────────────────── */
+  .voice-divider { border: none; border-top: 1px solid rgba(44,24,16,0.1); margin: 3rem 0 2.5rem; }
+  .voice-title { font-family: 'Playfair Display', serif; font-size: 1.35rem; color: var(--earth); margin-bottom: 0.3rem; }
+  .voice-sub { font-size: 0.85rem; color: #8a6a55; font-weight: 300; margin-bottom: 2rem; }
+  .voice-question { margin-bottom: 1.75rem; }
+  .voice-label { font-size: 0.78rem; letter-spacing: 0.08em; text-transform: uppercase; color: var(--clay); margin-bottom: 0.6rem; display: block; }
+  .voice-hint { font-size: 0.78rem; color: #a08070; margin-top: 0.3rem; }
+  .checkbox-grid { display: flex; flex-wrap: wrap; gap: 0.5rem; }
+  .checkbox-grid label {
+    padding: 0.45rem 0.9rem; font-size: 0.82rem; cursor: pointer;
+    border: 1.5px solid rgba(44,24,16,0.2); color: #6b4a35;
+    transition: all 0.15s; user-select: none;
+  }
+  .checkbox-grid label:hover { border-color: var(--clay); color: var(--earth); }
+  .checkbox-grid label.checked { background: var(--earth); color: var(--cream); border-color: var(--earth); }
+  .checkbox-grid input[type=checkbox] { display: none; }
+  .voice-select {
+    width: 100%; padding: 0.75rem 1rem;
+    border: 1.5px solid rgba(44,24,16,0.2); font-family: 'DM Sans', sans-serif;
+    font-size: 0.9rem; background: var(--warm-white); color: var(--earth);
+    outline: none; appearance: none; cursor: pointer;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%238B4513' stroke-width='1.5' fill='none'/%3E%3C/svg%3E");
+    background-repeat: no-repeat; background-position: right 1rem center;
+    padding-right: 2.5rem;
+  }
+  .voice-select:focus { border-color: var(--clay); }
+  .voice-textarea {
+    width: 100%; padding: 0.8rem 1rem;
+    border: 1.5px solid rgba(44,24,16,0.2); font-family: 'DM Sans', sans-serif;
+    font-size: 0.9rem; background: var(--warm-white); color: var(--earth);
+    outline: none; transition: border-color 0.2s; resize: vertical; min-height: 80px;
+  }
+  .voice-textarea:focus { border-color: var(--clay); }
+  .voice-textarea::placeholder, .voice-select option[value=''] { color: #b09080; }
+  .voice-save { background: var(--moss); color: var(--cream); border: none; padding: 0.75rem 1.75rem; font-family: 'DM Sans', sans-serif; font-size: 0.85rem; font-weight: 500; cursor: pointer; letter-spacing: 0.04em; transition: background 0.2s; }
+  .voice-save:hover { background: #3a4e2a; }
+  .voice-save:disabled { opacity: 0.5; cursor: not-allowed; }
+  .voice-msg { margin-top: 1rem; padding: 0.65rem 1rem; font-size: 0.82rem; display: none; }
+  .voice-msg.success { background: rgba(74,94,58,0.1); border: 1px solid rgba(74,94,58,0.4); color: var(--moss); display: block; }
+  .voice-msg.error { background: rgba(139,69,19,0.08); border: 1px solid rgba(139,69,19,0.3); color: var(--clay); display: block; }
+
   /* ── DIRECTORY ───────────────────────────────────────────── */
   .member-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 1.25rem; }
   .member-card { background: var(--cream); padding: 1.5rem; border-left: 3px solid var(--straw); }
@@ -206,6 +247,75 @@
         <button class="btn-edit" onclick="startEdit()">Edit Profile</button>
       </div>
       <div class="profile-msg" id="profileMsg"></div>
+
+      <!-- Community Voice section -->
+      <hr class="voice-divider">
+      <h2 class="voice-title">Community Voice</h2>
+      <p class="voice-sub">Your answers shape what Front Porch Economics builds next. Optional — save anytime.</p>
+
+      <div class="voice-question">
+        <span class="voice-label">What does wealth mean to you? <em style="font-style:normal;opacity:0.7">(pick up to 3)</em></span>
+        <div class="checkbox-grid" id="wealthGrid">
+          <label><input type="checkbox" value="financial_security">Financial security</label>
+          <label><input type="checkbox" value="family_community">Family &amp; community</label>
+          <label><input type="checkbox" value="health">Health</label>
+          <label><input type="checkbox" value="spiritual_peace">Spiritual peace</label>
+          <label><input type="checkbox" value="ownership">Ownership (home/business)</label>
+          <label><input type="checkbox" value="knowledge">Knowledge &amp; skills</label>
+          <label><input type="checkbox" value="freedom">Freedom &amp; time</label>
+        </div>
+      </div>
+
+      <div class="voice-question">
+        <span class="voice-label">Biggest barrier to building wealth</span>
+        <select class="voice-select" id="barrierType">
+          <option value="">Select one…</option>
+          <option value="systemic">Systemic (racism in loans, hiring, etc.)</option>
+          <option value="knowledge">Knowledge gaps (investing, credit, etc.)</option>
+          <option value="access">Access (tech, tools, capital)</option>
+          <option value="time">Time &amp; bandwidth</option>
+          <option value="trust">Distrust of institutions</option>
+          <option value="other">Other</option>
+        </select>
+        <textarea class="voice-textarea" id="barrierDetail" placeholder="Tell us more, if you'd like…" style="margin-top:0.6rem;"></textarea>
+      </div>
+
+      <div class="voice-question">
+        <span class="voice-label">What assets, skills, or networks does your community have that mainstream systems undervalue?</span>
+        <textarea class="voice-textarea" id="communityAssets" placeholder="e.g. informal childcare co-ops, bartering networks, cultural knowledge…"></textarea>
+      </div>
+
+      <div class="voice-question">
+        <span class="voice-label">Who or where does your community turn to for financial guidance?</span>
+        <textarea class="voice-textarea" id="trustedSpaces" placeholder="e.g. church, a neighbor, a community org…"></textarea>
+      </div>
+
+      <div class="voice-question">
+        <span class="voice-label">How do you prefer to connect with tools and resources?</span>
+        <div class="checkbox-grid" id="connectGrid">
+          <label><input type="checkbox" value="in_person">In person</label>
+          <label><input type="checkbox" value="mobile_app">Mobile app</label>
+          <label><input type="checkbox" value="sms">Text/SMS</label>
+          <label><input type="checkbox" value="phone_call">Phone call</label>
+          <label><input type="checkbox" value="email">Email</label>
+          <label><input type="checkbox" value="paper">Paper</label>
+        </div>
+      </div>
+
+      <div class="voice-question">
+        <span class="voice-label">Imagine your community in 10 years with equal wealth. What's different?</span>
+        <textarea class="voice-textarea" id="vision10yr" placeholder="Paint the picture…"></textarea>
+      </div>
+
+      <div class="voice-question">
+        <span class="voice-label">What's one small change that would make a big difference today?</span>
+        <textarea class="voice-textarea" id="oneChange" placeholder="One thing…"></textarea>
+      </div>
+
+      <div>
+        <button class="voice-save" id="voiceSaveBtn" onclick="saveCommunityVoice()">Save Community Voice</button>
+        <div class="voice-msg" id="voiceMsg"></div>
+      </div>
     </section>
 
     <!-- Directory Tab -->
@@ -273,6 +383,9 @@ function showDashboard() {
   document.getElementById('memberNav').hidden = false;
   document.getElementById('dashboard').hidden = false;
   populateProfile();
+  initCheckboxGroup('wealthGrid', 3);
+  initCheckboxGroup('connectGrid', 0);
+  loadCommunityVoice();
 }
 
 async function signOut() {
@@ -506,6 +619,96 @@ async function deleteLink(id) {
   } catch {
     if (el) el.style.opacity = '1';
   }
+}
+
+// ── COMMUNITY VOICE ───────────────────────────────────────
+
+function initCheckboxGroup(gridId, max) {
+  const grid = document.getElementById(gridId);
+  grid.querySelectorAll('label').forEach(lbl => {
+    lbl.addEventListener('click', () => {
+      const cb = lbl.querySelector('input');
+      const checked = grid.querySelectorAll('input:checked');
+      if (!cb.checked && max && checked.length >= max) return;
+      cb.checked = !cb.checked;
+      lbl.classList.toggle('checked', cb.checked);
+    });
+  });
+}
+
+function getChecked(gridId) {
+  return [...document.getElementById(gridId).querySelectorAll('input:checked')].map(c => c.value);
+}
+
+function setChecked(gridId, values) {
+  const grid = document.getElementById(gridId);
+  grid.querySelectorAll('label').forEach(lbl => {
+    const cb = lbl.querySelector('input');
+    const on = values.includes(cb.value);
+    cb.checked = on;
+    lbl.classList.toggle('checked', on);
+  });
+}
+
+async function loadCommunityVoice() {
+  try {
+    const res = await fetch(`${WORKER_URL}/auth/profile`, { credentials: 'include' });
+    if (!res.ok) return;
+    const data = await res.json();
+    if (!data.success || !data.profile) return;
+    const p = data.profile;
+    setChecked('wealthGrid', tryParse(p.wealth_priorities, []));
+    document.getElementById('barrierType').value = p.barrier_type || '';
+    document.getElementById('barrierDetail').value = p.barrier_detail || '';
+    document.getElementById('communityAssets').value = p.community_assets || '';
+    document.getElementById('trustedSpaces').value = p.trusted_spaces || '';
+    setChecked('connectGrid', tryParse(p.tech_preference, []));
+    document.getElementById('vision10yr').value = p.vision_10yr || '';
+    document.getElementById('oneChange').value = p.one_change || '';
+  } catch {}
+}
+
+function tryParse(val, fallback) {
+  if (!val) return fallback;
+  try { return JSON.parse(val); } catch { return fallback; }
+}
+
+async function saveCommunityVoice() {
+  const btn = document.getElementById('voiceSaveBtn');
+  btn.disabled = true;
+  btn.textContent = 'Saving…';
+  clearMsg('voiceMsg');
+
+  const body = {
+    wealth_priorities: getChecked('wealthGrid'),
+    barrier_type: document.getElementById('barrierType').value,
+    barrier_detail: document.getElementById('barrierDetail').value.trim(),
+    community_assets: document.getElementById('communityAssets').value.trim(),
+    trusted_spaces: document.getElementById('trustedSpaces').value.trim(),
+    tech_preference: getChecked('connectGrid'),
+    vision_10yr: document.getElementById('vision10yr').value.trim(),
+    one_change: document.getElementById('oneChange').value.trim(),
+  };
+
+  try {
+    const res = await fetch(`${WORKER_URL}/auth/profile`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      credentials: 'include',
+      body: JSON.stringify(body),
+    });
+    const data = await res.json();
+    if (data.success) {
+      setMsg('voiceMsg', 'Saved.', 'success');
+    } else {
+      setMsg('voiceMsg', data.error || 'Could not save. Try again.', 'error');
+    }
+  } catch {
+    setMsg('voiceMsg', 'Could not connect. Try again.', 'error');
+  }
+
+  btn.disabled = false;
+  btn.textContent = 'Save Community Voice';
 }
 
 // ── UTILS ─────────────────────────────────────────────────
